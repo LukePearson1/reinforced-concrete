@@ -9,4 +9,3 @@ edition = "2018"
 [dependencies]
 dusk-bls12_381 = {version = "0.6", default-features = false}
 bigint = "4.4.3"
-dusk-bytes = "0.1.3"
