@@ -13,7 +13,7 @@ use BLS::BlsScalar as Scalar;
 
 pub const vBLS: Scalar = Scalar([661, 0, 0, 0]);
 pub const vu256: u256 = u256([661, 0, 0, 0]);
-// Elements of the MDS matrix used; this is the matrix [[2,1,1],[1,2,1],[1,1,2]] 
+// Elements of the MDS matrix used; this is the matrix [[2,1,1],[1,2,1],[1,1,2]]
 // converted to BLS Scalar form (i.e. in Montgomery form)
 pub const matrixBLS: [[Scalar; 3]; 3] = [
     [
