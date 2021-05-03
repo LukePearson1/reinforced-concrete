@@ -64,10 +64,7 @@ pub fn bar(state: [Scalar; 3]) -> [Scalar; 3] {
                 value = intermediate
             }
             // 2. S-box
-            println!("value value: {:?}", value);
             nibbles[k] = small_s_box(value);
-            println!("nibble value: {:?}", nibbles[k]);
-            println!("intermediate value: {:?}", intermediate);
         }
 
         // 3. Composition
