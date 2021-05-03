@@ -131,7 +131,7 @@ mod tests {
     fn decomposition_inverses_correct() {
         for k in 0..27 {
             let product =
-                Scalar::from_raw(decomposition_s_i[2 * k + 1].0) * decomposition_inverses_mont[k];
+                Scalar::from_raw(decomposition_s_i[k].0) * decomposition_inverses_mont[k];
             assert_eq!(product, Scalar::one());
         }
     }
