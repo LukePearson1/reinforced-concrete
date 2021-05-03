@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
-//
+
 //! This module contains the fundamental functions required for hashing,
 //! using lookups. These are the three main functions of Zelbet:
 //! Bricks, Concrete and Bars.

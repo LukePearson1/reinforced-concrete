@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
-//
+
 //! Here the constants and fundamental building blocks, which make up the moving
 //! parts of the hash function Reinforced Concrete, are defined.
 
