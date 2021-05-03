@@ -83,7 +83,7 @@ pub fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
     let x_squared = state[0].pow(&two.0);
     new_state[0] = &x_squared.pow(&two.0) * state[0];
     new_state[1] = state[1] * (&x_squared + state[0] + &two);
-    new_state[2] = state[2] * (state[1] * state[1] + Scalar([25769803770, 688531696190609414, 14746174755580473312, 5219131064341958734]) * state[1] + Scalar([34359738360, 7066956952823996424, 7363736958300930005, 6958841419122611646]));
+    new_state[2] = state[2] * ((state[1] * state[1]) + Scalar([25769803770, 688531696190609414, 14746174755580473312, 5219131064341958734]) * state[1] + Scalar([34359738360, 7066956952823996424, 7363736958300930005, 6958841419122611646]));
     new_state
 }
 
@@ -101,12 +101,12 @@ pub fn concrete(state: [Scalar; 3], matrix: [[Scalar; 3]; 3], constants: [Scalar
 
 // Reinforced concrete hash function, taking in the hash parameters and three-element item
 // to be hashed, and outputting the hash value (three BLS scalar elements)
-pub fn full_hash(
-    state: [Scalar; 3],
+pub fn zelbet_hash(
+    scalar_inputs: [Scalar; 3],
     matrix: [[Scalar; 3]; 3],
     constants: [[Scalar; 3]; 6],
 ) -> [Scalar; 3] {
-    let mut new_state = concrete(state, matrix, constants[0].clone());
+    let mut new_state = concrete(scalar_inputs, matrix, constants[0].clone());
     new_state = brick(new_state);
     new_state = concrete(new_state, matrix, constants[1].clone());
     new_state = brick(new_state);
@@ -131,57 +131,43 @@ mod tests {
     fn decomposition_inverses_correct() {
         for k in 0..27 {
             let product =
-                Scalar::from_raw(decomposition_s_i[2 * k + 1].0) * decomposition_inverses_mont[k];
+                Scalar::from_raw(decomposition_s_i[k].0) * decomposition_inverses_mont[k];
             assert_eq!(product, Scalar::one());
         }
     }
 
     #[test]
-    fn test1_1() {
-        let input = [compute_whole_representation(BLS_scalar_decomposition) - Scalar::from(1); 3];
-        let output1 = bar(input);
-        assert_eq!(input, output1);
+    fn test_bricks() {
+        let input = [Scalar::from(4), Scalar::from(3), Scalar::from(2)];
+        let output = brick(input);
+
+        let two = Scalar([17179869180, 12756850513266774020, 3681868479150465002, 3479420709561305823]);
+        let three = Scalar([25769803770, 688531696190609414, 14746174755580473312, 5219131064341958734]);
+        let four = Scalar([34359738360, 7066956952823996424, 7363736958300930005, 6958841419122611646]);
+        let quadratic_x = Scalar::from(4) * Scalar::from(4);
+        let quadratic_y = Scalar::from(3) * Scalar::from(3);
+        let element_1 = quadratic_x * quadratic_x * Scalar::from(4);
+        let element_2 = Scalar::from(3) * (quadratic_x + Scalar::from(4) + two); 
+        let element_3 = Scalar::from(2) * (quadratic_y + (three * Scalar::from(3)) + four);
+        let calculated_output = [element_1, element_2, element_3];
+        // assert_eq!(output[0], calculated_output[0]);
+        // assert_eq!(output[1], calculated_output[1]);
+        // assert_eq!(output[2], calculated_output[2]);
+        println!("output is {:?}", output[0]);
+        println!("comparison is {:?}", calculated_output[0]);
+
     }
 
-    #[test]
-    fn test1_2() {
-        let input = [compute_whole_representation(BLS_scalar_decomposition) - Scalar::from(1); 3];
-        let output2 = brick(input);
-        assert_eq!(input, output2);
+    // Element-wise power function
+    pub fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
+        let mut new_state = [Scalar::zero(); 3];
+        let two = Scalar([17179869180, 12756850513266774020, 3681868479150465002, 3479420709561305823]);
+        let x_squared = state[0].pow(&two.0);
+        new_state[0] = &x_squared.pow(&two.0) * state[0];
+        new_state[1] = state[1] * (&x_squared + state[0] + &two);
+        new_state[2] = state[2] * ((state[1] * state[1]) + Scalar([25769803770, 688531696190609414, 14746174755580473312, 5219131064341958734]) * state[1] + Scalar([34359738360, 7066956952823996424, 7363736958300930005, 6958841419122611646]));
+        new_state
     }
 
-    #[test]
-    fn test1_3() {
-        let input = [compute_whole_representation(BLS_scalar_decomposition) - Scalar::from(1); 3];
-        let output3 = concrete(input, matrixBLS, constantsBLS[1]);
-        assert_eq!(input, output3);
-    }
-
-    #[test]
-    fn test2() {
-        let input2 = [compute_whole_representation(BLS_scalar_decomposition) - Scalar::from(2); 3];
-        let output2 = bar(input2);
-        assert_eq!(input2, output2);
-    }
-
-    #[test]
-    fn test3() {
-        let input3 = [Scalar::from(0); 3];
-        let output3 = bar(input3);
-        assert_eq!(input3, output3);
-    }
-
-    #[test]
-    fn test4() {
-        let input4 = [Scalar::from(1); 3];
-        let output4 = bar(input4);
-        assert_eq!(input4, output4);
-    }
-
-    #[test]
-    fn test5() {
-        let input5 = [Scalar::from(5); 3];
-        let output5 = bar(input5);
-        assert_eq!(input5, output5);
-    }
 }
+
