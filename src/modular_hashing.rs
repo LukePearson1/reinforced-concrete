@@ -18,8 +18,11 @@ use constants::{decomposition_inverses_mont, vu256, SboxBLS};
 
 const DECOMPOSITION_LEN: usize = 27;
 
-// Convert representation from tuple in (Z_{s1} x ... x Z_{s_n}) to single element
-fn compute_whole_representation(decomposition: [u256; DECOMPOSITION_LEN]) -> Scalar {
+// Convert representation from tuple in (Z_{s1} x ... x Z_{s_n}) to single
+// element
+fn compute_whole_representation(
+    decomposition: [u256; DECOMPOSITION_LEN],
+) -> Scalar {
     // Note that decomposition[53] is s_1, not s_n, so decomposition[1] is s_n
     Scalar::from_raw(
         (0..DECOMPOSITION_LEN)
@@ -46,8 +49,9 @@ fn bar(mut state: [Scalar; 3]) {
 
     for scalar in state.iter_mut() {
         // 1. Decomposition
-        // Get state value that we are decomposing in non-Montgomery form (comes in Montgomery form by default
-        // due to BLS library; but the modular operations won't work as intended if left like this)
+        // Get state value that we are decomposing in non-Montgomery form (comes
+        // in Montgomery form by default due to BLS library; but the
+        // modular operations won't work as intended if left like this)
         let mut intermediate = u256(scalar.reduce().0);
         let mut value = u256::zero();
 
@@ -57,9 +61,11 @@ fn bar(mut state: [Scalar; 3]) {
             // Reduce intermediate representation
             match k < 26 {
                 true => {
-                    // Convert to BLS scalar form to make use of fast modular multiplication (rather than dividing)
+                    // Convert to BLS scalar form to make use of fast modular
+                    // multiplication (rather than dividing)
                     let intermediate_scalar: Scalar =
-                        Scalar::from_raw((intermediate - value).0) * decomposition_inverses_mont[k];
+                        Scalar::from_raw((intermediate - value).0)
+                            * decomposition_inverses_mont[k];
                     intermediate = u256(intermediate_scalar.reduce().0);
                 }
                 false => value = intermediate,
@@ -104,7 +110,11 @@ fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
 }
 
 // Apply affine transformation to state via MDS matrix multiplication
-fn concrete(state: [Scalar; 3], matrix: [[Scalar; 3]; 3], constants: [Scalar; 3]) -> [Scalar; 3] {
+fn concrete(
+    state: [Scalar; 3],
+    matrix: [[Scalar; 3]; 3],
+    constants: [Scalar; 3],
+) -> [Scalar; 3] {
     let mut new_state = constants;
 
     // matrix multiplication
@@ -117,8 +127,9 @@ fn concrete(state: [Scalar; 3], matrix: [[Scalar; 3]; 3], constants: [Scalar; 3]
     new_state
 }
 
-// Reinforced concrete hash function, taking in the hash parameters and three-element item
-// to be hashed, and outputting the hash value (three BLS scalar elements)
+// Reinforced concrete hash function, taking in the hash parameters and
+// three-element item to be hashed, and outputting the hash value (three BLS
+// scalar elements)
 pub fn zelbet_hash(
     scalar_inputs: [Scalar; 3],
     matrix: [[Scalar; 3]; 3],
@@ -148,7 +159,8 @@ mod tests {
     #[test]
     fn decomposition_inverses_correct() {
         for k in 0..27 {
-            let product = Scalar::from_raw(decomposition_s_i[k].0) * decomposition_inverses_mont[k];
+            let product = Scalar::from_raw(decomposition_s_i[k].0)
+                * decomposition_inverses_mont[k];
             assert_eq!(product, Scalar::one());
         }
     }
@@ -180,7 +192,8 @@ mod tests {
         let quadratic_y = Scalar::from(3) * Scalar::from(3);
         let element_1 = quadratic_x * quadratic_x * Scalar::from(4);
         let element_2 = Scalar::from(3) * (quadratic_x + Scalar::from(4) + two);
-        let element_3 = Scalar::from(2) * (quadratic_y + (three * Scalar::from(3)) + four);
+        let element_3 =
+            Scalar::from(2) * (quadratic_y + (three * Scalar::from(3)) + four);
         let calculated_output = [element_1, element_2, element_3];
         println!("{:?}", output);
         println!("{:?}", calculated_output);

@@ -4,8 +4,8 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 //
-//! Here the constants and fundamental building blocks, which make up the moving parts
-//! of the hash function Reinforced Concrete, are defined.
+//! Here the constants and fundamental building blocks, which make up the moving
+//! parts of the hash function Reinforced Concrete, are defined.
 
 extern crate dusk_bls12_381 as BLS;
 use bigint::U256 as u256;
