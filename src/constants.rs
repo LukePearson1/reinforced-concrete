@@ -1,4 +1,11 @@
-// Constants file
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) DUSK NETWORK. All rights reserved.
+//
+//! Here the constants and fundamental building blocks, which make up the moving parts
+//! of the hash function Reinforced Concrete, are defined.
 
 extern crate dusk_bls12_381 as BLS;
 use bigint::U256 as u256;
