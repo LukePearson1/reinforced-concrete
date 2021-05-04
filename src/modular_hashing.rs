@@ -126,9 +126,9 @@ fn concrete(
     new_state
 }
 
-// Reinforced concrete hash function, taking in the hash parameters and
-// three-element item to be hashed, and outputting the hash value (three BLS
-// scalar elements)
+/// Reinforced concrete hash function, taking in the hash parameters and
+/// three-element item to be hashed, and outputting the hash value (three BLS
+/// scalar elements)
 pub fn zelbet_hash(
     scalar_inputs: [Scalar; 3],
     matrix: [[Scalar; 3]; 3],
@@ -151,10 +151,10 @@ pub fn zelbet_hash(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use constants::{constantsBLS, matrixBLS, inverses_s_i};
+    use constants::{constantsBLS, inverses_s_i, matrixBLS};
 
     #[test]
-    fn inverses_correct() {
+    fn test_inverses_correct() {
         for k in 0..27 {
             let product = Scalar(decomposition_s_i[k].0) * (inverses_s_i[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
@@ -196,6 +196,7 @@ mod tests {
         assert_eq!(output[0], calculated_output[0]);
         assert_eq!(output[1], calculated_output[1]);
         assert_eq!(output[2], calculated_output[2]);
+        assert_ne!(output[2], Scalar::from(30));
     }
 
     #[test]
@@ -219,5 +220,6 @@ mod tests {
         }
 
         assert_eq!(new_state, output);
+        assert_ne!(new_state[0], Scalar::from(30));
     }
 }
