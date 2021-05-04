@@ -18,7 +18,7 @@ use constants::{vu256, SboxBLS};
 
 const DECOMPOSITION_LEN: usize = 27;
 
-// Convert representation from tuple in (Z_{s1} x ... x Z_{s_n}) to single
+// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
 // element
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
@@ -65,7 +65,7 @@ fn bar(mut state: [Scalar; 3]) {
                     // multiplication (rather than dividing)
                     let intermediate_scalar: Scalar =
                         Scalar((intermediate - value).0) * inverses_s_i[k];
-                    intermediate = u256(intermediate_scalar.reduce().0);
+                    intermediate = u256(intermediate_scalar.0);
                 }
                 false => value = intermediate,
             };
@@ -156,8 +156,8 @@ mod tests {
     #[test]
     fn inverses_correct() {
         for k in 0..27 {
-            let product = Scalar(decomposition_s_i[k].0) * inverses_s_i[k];
-            assert_eq!(product, Scalar::one());
+            let product = Scalar(decomposition_s_i[k].0) * (inverses_s_i[k]);
+            assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
     }
 
