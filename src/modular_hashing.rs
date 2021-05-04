@@ -23,7 +23,7 @@ const DECOMPOSITION_LEN: usize = 27;
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
 ) -> Scalar {
-    // Note that decomposition[53] is s_1, not s_n, so decomposition[1] is s_n
+    // Note that decomposition_s_i[26] is s_1, so decomposition_s_i[0] is s_27
     Scalar::from_raw(
         (0..DECOMPOSITION_LEN)
             .rev()
