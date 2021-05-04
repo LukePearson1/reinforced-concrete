@@ -202,7 +202,7 @@ pub const constantsBLS: [[Scalar; 3]; 6] = [
     ],
 ];
 
-// decomposition = [v_n, v_{n-1} ..., v_1]
+// decomposition = [v_n, v_{n-1} ..., v_1], which is the representation of q-1
 pub const BLS_scalar_decomposition: [u256; 27] = [
     u256([32, 0, 0, 0]),
     u256([35, 0, 0, 0]),
@@ -264,8 +264,9 @@ pub const decomposition_s_i: [u256; 27] = [
     u256([679, 0, 0, 0]),
 ];
 
-// decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ..., s_1^{-1}]
-pub const decomposition_inverses_mont: [Scalar; 27] = [
+// decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
+// s_1^{-1}]
+pub const inverses_s_i: [Scalar; 27] = [
     Scalar([
         10221572469640980478,
         9996602938199176322,

@@ -10,15 +10,15 @@
 
 extern crate dusk_bls12_381 as BLS;
 
-use crate::constants::{self, decomposition_s_i};
+use crate::constants::{self, decomposition_s_i, inverses_s_i};
 use bigint::U256 as u256;
 use BLS::BlsScalar as Scalar;
 
-use constants::{decomposition_inverses_mont, vu256, SboxBLS};
+use constants::{vu256, SboxBLS};
 
 const DECOMPOSITION_LEN: usize = 27;
 
-// Convert representation from tuple in (Z_{s1} x ... x Z_{s_n}) to single
+// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
 // element
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
@@ -64,9 +64,8 @@ fn bar(mut state: [Scalar; 3]) {
                     // Convert to BLS scalar form to make use of fast modular
                     // multiplication (rather than dividing)
                     let intermediate_scalar: Scalar =
-                        Scalar::from_raw((intermediate - value).0)
-                            * decomposition_inverses_mont[k];
-                    intermediate = u256(intermediate_scalar.reduce().0);
+                        Scalar((intermediate - value).0) * inverses_s_i[k];
+                    intermediate = u256(intermediate_scalar.0);
                 }
                 false => value = intermediate,
             };
@@ -151,17 +150,14 @@ pub fn zelbet_hash(
 
 #[cfg(test)]
 mod tests {
-    use crate::constants::BLS_scalar_decomposition;
-
     use super::*;
-    use constants::{constantsBLS, decomposition_inverses_mont, matrixBLS};
+    use constants::{constantsBLS, matrixBLS, inverses_s_i};
 
     #[test]
-    fn decomposition_inverses_correct() {
+    fn inverses_correct() {
         for k in 0..27 {
-            let product = Scalar::from_raw(decomposition_s_i[k].0)
-                * decomposition_inverses_mont[k];
-            assert_eq!(product, Scalar::one());
+            let product = Scalar(decomposition_s_i[k].0) * (inverses_s_i[k]);
+            assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
     }
 
