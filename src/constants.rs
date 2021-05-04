@@ -15,7 +15,7 @@ pub const V_BLS: Scalar = Scalar([661, 0, 0, 0]);
 pub const VU_256: u256 = u256([661, 0, 0, 0]);
 // Elements of the MDS matrix used; this is the matrix [[2,1,1],[1,2,1],[1,1,2]]
 // converted to BLS Scalar form (i.e. in Montgomery form)
-pub const Matrix_BLS: [[Scalar; 3]; 3] = [
+pub const MATRIX_BLS: [[Scalar; 3]; 3] = [
     [
         Scalar([
             17179869180,
@@ -79,7 +79,7 @@ pub const Matrix_BLS: [[Scalar; 3]; 3] = [
 ];
 
 // Constant round vector that is included in concrete (in Montgomery form)
-pub const Constants_BLS: [[Scalar; 3]; 6] = [
+pub const CONSTANTS_BLS: [[Scalar; 3]; 6] = [
     [
         Scalar([
             15103436521110050711,
@@ -203,7 +203,7 @@ pub const Constants_BLS: [[Scalar; 3]; 6] = [
 ];
 
 // decomposition = [v_n, v_{n-1} ..., v_1], which is the representation of q-1
-pub const BLS_Scalar_Decomposition: [u256; 27] = [
+pub const BLS_SCALAR_DECOMPOSITION: [u256; 27] = [
     u256([32, 0, 0, 0]),
     u256([35, 0, 0, 0]),
     u256([20, 0, 0, 0]),
@@ -234,7 +234,7 @@ pub const BLS_Scalar_Decomposition: [u256; 27] = [
 ];
 
 // decomposition = [s_n, s_{n-1} ..., s_1]
-pub const Decomposition_S_I: [u256; 27] = [
+pub const DECOMPOSITION_S_I: [u256; 27] = [
     u256([693, 0, 0, 0]),
     u256([696, 0, 0, 0]),
     u256([694, 0, 0, 0]),
@@ -266,7 +266,7 @@ pub const Decomposition_S_I: [u256; 27] = [
 
 // decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
 // s_1^{-1}]
-pub const Inverses_S_I: [Scalar; 27] = [
+pub const INVERSES_S_I: [Scalar; 27] = [
     Scalar([
         10221572469640980478,
         9996602938199176322,
@@ -431,7 +431,7 @@ pub const Inverses_S_I: [Scalar; 27] = [
     ]),
 ];
 
-pub const Sbox_BLS: [u256; 661] = [
+pub const SBOX_BLS: [u256; 661] = [
     u256([248, 0, 0, 0]),
     u256([131, 0, 0, 0]),
     u256([29, 0, 0, 0]),

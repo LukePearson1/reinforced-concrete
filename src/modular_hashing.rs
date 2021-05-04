@@ -10,11 +10,11 @@
 
 extern crate dusk_bls12_381 as BLS;
 
-use crate::constants::{self, Decomposition_S_I, Inverses_S_I};
+use crate::constants::{self, DECOMPOSITION_S_I, INVERSES_S_I};
 use bigint::U256 as u256;
 use BLS::BlsScalar as Scalar;
 
-use constants::{Sbox_BLS, VU_256};
+use constants::{SBOX_BLS, VU_256};
 
 const DECOMPOSITION_LEN: usize = 27;
 
@@ -28,7 +28,7 @@ fn compute_whole_representation(
         (0..DECOMPOSITION_LEN)
             .rev()
             .fold(u256::zero(), |single, k| match k > 0 {
-                true => (single + decomposition[k]) * Decomposition_S_I[k - 1],
+                true => (single + decomposition[k]) * DECOMPOSITION_S_I[k - 1],
                 false => single + decomposition[k],
             })
             .0,
@@ -38,7 +38,7 @@ fn compute_whole_representation(
 // S-box used in bar function
 fn small_s_box(x: u256) -> u256 {
     match x < VU_256 {
-        true => Sbox_BLS[x.as_u32() as usize],
+        true => SBOX_BLS[x.as_u32() as usize],
         false => x,
     }
 }
@@ -56,7 +56,7 @@ fn bar(mut state: [Scalar; 3]) {
         let mut value = u256::zero();
 
         (0..27).for_each(|k| {
-            value = intermediate % Decomposition_S_I[k];
+            value = intermediate % DECOMPOSITION_S_I[k];
 
             // Reduce intermediate representation
             match k < 26 {
@@ -64,7 +64,7 @@ fn bar(mut state: [Scalar; 3]) {
                     // Convert to BLS scalar form to make use of fast modular
                     // multiplication (rather than dividing)
                     let intermediate_scalar: Scalar =
-                        Scalar((intermediate - value).0) * Inverses_S_I[k];
+                        Scalar((intermediate - value).0) * INVERSES_S_I[k];
                     intermediate = u256(intermediate_scalar.0);
                 }
                 false => value = intermediate,
@@ -151,12 +151,12 @@ pub fn zelbet_hash(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use constants::{Constants_BLS, Inverses_S_I, Matrix_BLS};
+    use constants::{CONSTANTS_BLS, INVERSES_S_I, MATRIX_BLS};
 
     #[test]
     fn test_inverses_correct() {
         for k in 0..27 {
-            let product = Scalar(Decomposition_S_I[k].0) * (Inverses_S_I[k]);
+            let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
     }
@@ -199,8 +199,8 @@ mod tests {
     #[test]
     fn test_concrete() {
         let state = [Scalar::from(4), Scalar::from(3), Scalar::from(2)];
-        let matrix = Matrix_BLS;
-        let constants = Constants_BLS;
+        let matrix = MATRIX_BLS;
+        let constants = CONSTANTS_BLS;
         let output = concrete(state, matrix, constants[0]);
 
         let copy_matrix = [
