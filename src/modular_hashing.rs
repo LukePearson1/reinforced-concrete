@@ -44,7 +44,7 @@ fn small_s_box(x: u256) -> u256 {
 }
 
 // Lookup-table-based Sbox
-fn bar(mut state: [Scalar; 3]) {
+fn bar(state: &mut [Scalar; 3]) {
     let mut nibbles = [u256::zero(); 27];
 
     for scalar in state.iter_mut() {
@@ -139,7 +139,7 @@ pub fn zelbet_hash(
     new_state = concrete(new_state, matrix, constants[1].clone());
     new_state = brick(new_state);
     new_state = concrete(new_state, matrix, constants[2].clone());
-    bar(new_state);
+    bar(&mut new_state);
     new_state = concrete(new_state, matrix, constants[3].clone());
     new_state = brick(new_state);
     new_state = concrete(new_state, matrix, constants[4].clone());
@@ -159,6 +159,16 @@ mod tests {
             let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
+    }
+
+    #[test]
+    fn test_bar() {
+        let mut input = [Scalar::one(); 3];
+        bar(&mut input);
+        let mut breakdown = [u256([248, 0, 0, 0]); 27];
+        breakdown[0] = u256([131, 0, 0, 0]);
+        let composed = compute_whole_representation(breakdown);
+        assert_eq!(input[0], composed);
     }
 
     #[test]
