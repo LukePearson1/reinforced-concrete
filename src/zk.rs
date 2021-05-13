@@ -4,26 +4,20 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-// This file contains the circuit implementation of the
-// zelbet hash function
+//! This file contains the circuit implementation of the
+//! zelbet hash function
 
+use crate::constants::{MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO};
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
 /// This function computes the in-circuit brick function,
 /// as part of the hashing gadget
-pub fn brick_gagdet(
+pub fn brick_gadget(
     composer: &mut StandardComposer,
     state: &[Variable; 3],
 ) -> [Variable; 3] {
-    let montgomery_two = BlsScalar([
-        17179869180,
-        12756850513266774020,
-        3681868479150465002,
-        3479420709561305823,
-    ]);
-
-    let two = composer.add_witness_to_circuit_description(montgomery_two);
+    let two = composer.add_witness_to_circuit_description(MONTGOMERY_TWO);
 
     let x_squared = composer.mul(
         BlsScalar::one(),
@@ -53,23 +47,9 @@ pub fn brick_gagdet(
     let var_two =
         composer.mul(BlsScalar::one(), state[1], tuple, BlsScalar::one(), None);
 
-    let montgomery_three = BlsScalar([
-        25769803770,
-        688531696190609414,
-        14746174755580473312,
-        5219131064341958734,
-    ]);
+    let three = composer.add_witness_to_circuit_description(MONTGOMERY_THREE);
 
-    let three = composer.add_witness_to_circuit_description(montgomery_three);
-
-    let montgomery_four = BlsScalar([
-        34359738360,
-        7066956952823996424,
-        7363736958300930005,
-        6958841419122611646,
-    ]);
-
-    let four = composer.add_witness_to_circuit_description(montgomery_four);
+    let four = composer.add_witness_to_circuit_description(MONTGOMERY_FOUR);
 
     // x3 ·(x2 +α2 ·x2 +β2))
 
@@ -103,9 +83,13 @@ mod tests {
     fn test_bricks_gadget() {
         let mut composer = StandardComposer::new();
         let one = composer.add_witness_to_circuit_description(BlsScalar::one());
-        let output = brick_gagdet(&mut composer, &[one, one, one]);
+        let output = brick_gadget(&mut composer, &[one, one, one]);
         composer.constrain_to_constant(
             output[2],
+            // This Bls is taken from a print of the 
+            // same value in modular_hashing. This 
+            // is performed as it makes it easier
+            // to compare to the obfuscated `variable`
             BlsScalar::from(16384),
             Some(BlsScalar::zero()),
         );

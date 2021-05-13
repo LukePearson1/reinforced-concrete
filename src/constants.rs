@@ -1094,3 +1094,36 @@ pub const SBOX_BLS: [u256; 661] = [
     u256([576, 0, 0, 0]),
     u256([504, 0, 0, 0]),
 ];
+
+/// This is the montgomery form
+/// of the BlsScalar Two, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_TWO: Scalar = Scalar([
+    17179869180,
+    12756850513266774020,
+    3681868479150465002,
+    3479420709561305823,
+]);
+
+/// This is the montgomery form
+/// of the BlsScalar Three, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_THREE: Scalar = Scalar([
+    25769803770,
+    688531696190609414,
+    14746174755580473312,
+    5219131064341958734,
+]);
+
+/// This is the montgomery form
+/// of the BlsScalar Four, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_FOUR: Scalar = Scalar([
+    34359738360,
+    7066956952823996424,
+    7363736958300930005,
+    6958841419122611646,
+]);

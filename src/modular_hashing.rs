@@ -237,6 +237,5 @@ mod tests {
         }
 
         assert_eq!(new_state, output);
-        println!("{:?}", new_state)
     }
 }
