@@ -86,8 +86,8 @@ mod tests {
         let output = brick_gadget(&mut composer, &[one, one, one]);
         composer.constrain_to_constant(
             output[2],
-            // This Bls is taken from a print of the 
-            // same value in modular_hashing. This 
+            // This Bls is taken from a print of the
+            // same value in modular_hashing. This
             // is performed as it makes it easier
             // to compare to the obfuscated `variable`
             BlsScalar::from(16384),
