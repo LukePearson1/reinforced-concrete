@@ -10,7 +10,6 @@
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
-/// xd1,x2 ·(x21 +α1 ·x1 +β1),x3 ·(x2 +α2 ·x2 +β2))
 
 /// This function computes the in-circuit brick function,
 /// as part of the hashing gadget
@@ -96,105 +95,6 @@ pub fn brick_gagdet(
     [var_one, var_two, var_three]
 }
 
-/// This function computes the in-circuit bars function,
-/// as part of the hashing gadget
-pub fn bar_gadget(composer: &mut StandardComposer, state: &[Variable; 3]) {
-    let zero = composer.add_witness_to_circuit_description(BlsScalar::zero());
-}
-
-/// In-circuit concrete function as part of the Zelbet hashing
-/// gadget with t = 3 and MDS matrix M = circ(2, 1, 1).
-pub fn concrete_gadget(
-    composer: &mut StandardComposer,
-    state: &[Variable; 3],
-    constants: &[Variable; 3],
-) -> [Variable; 3] {
-    let montgomery_two = BlsScalar([
-        17179869180,
-        12756850513266774020,
-        3681868479150465002,
-        3479420709561305823,
-    ]);
-
-    let two = composer.add_witness_to_circuit_description(montgomery_two);
-
-    // out0 = 2*u[0] + u[1] + u[2] + c[0];
-    let a0 =
-        composer.mul(BlsScalar::one(), two, state[0], BlsScalar::one(), None);
-    let b0 = composer.big_add(
-        (BlsScalar::one(), a0),
-        (BlsScalar::one(), state[1]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let c0 = composer.big_add(
-        (BlsScalar::one(), b0),
-        (BlsScalar::one(), state[2]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let out0 = composer.big_add(
-        (BlsScalar::one(), c0),
-        (BlsScalar::one(), constants[0]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-
-    // out1 = u[0] + 2*u[1] + u[2] + c[1];
-    let a1 =
-        composer.mul(BlsScalar::one(), two, state[1], BlsScalar::one(), None);
-    let b1 = composer.big_add(
-        (BlsScalar::one(), a1),
-        (BlsScalar::one(), state[0]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let c1 = composer.big_add(
-        (BlsScalar::one(), b1),
-        (BlsScalar::one(), state[2]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let out1 = composer.big_add(
-        (BlsScalar::one(), c1),
-        (BlsScalar::one(), constants[1]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-
-    // out2 = u[0] + u[1] + 2*u[2] + c[2];
-    let a2 =
-        composer.mul(BlsScalar::one(), two, state[2], BlsScalar::one(), None);
-    let b2 = composer.big_add(
-        (BlsScalar::one(), a2),
-        (BlsScalar::one(), state[0]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let c2 = composer.big_add(
-        (BlsScalar::one(), b2),
-        (BlsScalar::one(), state[1]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let out2 = composer.big_add(
-        (BlsScalar::one(), c2),
-        (BlsScalar::one(), constants[2]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-
-    return [out0, out1, out2];
-}
 
 #[cfg(test)]
 mod tests {
