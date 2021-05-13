@@ -10,7 +10,6 @@
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
-
 /// This function computes the in-circuit brick function,
 /// as part of the hashing gadget
 pub fn brick_gagdet(
@@ -94,7 +93,6 @@ pub fn brick_gagdet(
 
     [var_one, var_two, var_three]
 }
-
 
 #[cfg(test)]
 mod tests {
