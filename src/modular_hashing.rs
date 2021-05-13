@@ -44,7 +44,7 @@ fn small_s_box(x: u256) -> u256 {
 }
 
 // Lookup-table-based Sbox
-fn bar(mut state: [Scalar; 3]) {
+fn bar(state: &mut [Scalar; 3]) {
     let mut nibbles = [u256::zero(); 27];
 
     for scalar in state.iter_mut() {
@@ -80,6 +80,14 @@ fn bar(mut state: [Scalar; 3]) {
 }
 
 // Element-wise power function
+// α1 = 1
+// α2 = 3
+// β1 = 2
+// β2 = 4
+// The above constants are used in the
+// paper as part of the bricks description.
+// These are given in a montgomery reduction
+// form
 fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
     let mut new_state = [Scalar::zero(); 3];
     let two = Scalar([
@@ -89,6 +97,8 @@ fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
         3479420709561305823,
     ]);
     let x_squared = state[0] * state[0];
+    // From the description of alpha_i - (4 * beta_i) != a square modulo p
+    // d is taken to be 5. Thus x1^5 is the first element in state output.
     new_state[0] = x_squared * x_squared * state[0];
     new_state[1] = state[1] * (&x_squared + state[0] + &two);
     new_state[2] = state[2]
@@ -139,7 +149,7 @@ pub fn zelbet_hash(
     new_state = concrete(new_state, matrix, constants[1].clone());
     new_state = brick(new_state);
     new_state = concrete(new_state, matrix, constants[2].clone());
-    bar(new_state);
+    bar(&mut new_state);
     new_state = concrete(new_state, matrix, constants[3].clone());
     new_state = brick(new_state);
     new_state = concrete(new_state, matrix, constants[4].clone());
@@ -159,6 +169,16 @@ mod tests {
             let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
+    }
+
+    #[test]
+    fn test_bar() {
+        let mut input = [Scalar::one(); 3];
+        bar(&mut input);
+        let mut breakdown = [u256([248, 0, 0, 0]); 27];
+        breakdown[0] = u256([131, 0, 0, 0]);
+        let composed = compute_whole_representation(breakdown);
+        assert_eq!(input[0], composed);
     }
 
     #[test]
@@ -217,6 +237,5 @@ mod tests {
         }
 
         assert_eq!(new_state, output);
-        assert_ne!(new_state[0], Scalar::from(30));
     }
 }
