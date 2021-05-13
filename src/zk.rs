@@ -74,6 +74,8 @@ pub fn brick_gadget(
     [var_one, var_two, var_three]
 }
 
+// TODO: verify all functions against python outputs
+// for hashing the same values.
 #[cfg(test)]
 mod tests {
     use super::*;
