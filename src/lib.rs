@@ -6,3 +6,4 @@
 
 pub mod constants;
 pub mod modular_hashing;
+pub mod zk;

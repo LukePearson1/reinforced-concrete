@@ -80,6 +80,14 @@ fn bar(state: &mut [Scalar; 3]) {
 }
 
 // Element-wise power function
+// α1 = 1
+// α2 = 3
+// β1 = 2
+// β2 = 4
+// The above constants are used in the
+// paper as part of the bricks description.
+// These are given in a montgomery reduction
+// form
 fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
     let mut new_state = [Scalar::zero(); 3];
     let two = Scalar([
@@ -89,6 +97,8 @@ fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
         3479420709561305823,
     ]);
     let x_squared = state[0] * state[0];
+    // From the description of alpha_i - (4 * beta_i) != a square modulo p
+    // d is taken to be 5. Thus x1^5 is the first element in state output.
     new_state[0] = x_squared * x_squared * state[0];
     new_state[1] = state[1] * (&x_squared + state[0] + &two);
     new_state[2] = state[2]
@@ -227,6 +237,6 @@ mod tests {
         }
 
         assert_eq!(new_state, output);
-        assert_ne!(new_state[0], Scalar::from(30));
+        println!("{:?}", new_state)
     }
 }
