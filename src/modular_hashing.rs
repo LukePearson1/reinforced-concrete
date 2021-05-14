@@ -14,7 +14,7 @@ use crate::constants::{self, DECOMPOSITION_S_I, INVERSES_S_I};
 use bigint::U256 as u256;
 use BLS::BlsScalar as Scalar;
 
-use constants::{SBOX_BLS, VU_256};
+use constants::{SBOX_BLS, VU_256, MONTGOMERY_TWO, MONTGOMERY_THREE, MONTGOMERY_FOUR};
 
 const DECOMPOSITION_LEN: usize = 27;
 
@@ -90,31 +90,16 @@ fn bar(state: &mut [Scalar; 3]) {
 // form
 fn brick(state: [Scalar; 3]) -> [Scalar; 3] {
     let mut new_state = [Scalar::zero(); 3];
-    let two = Scalar([
-        17179869180,
-        12756850513266774020,
-        3681868479150465002,
-        3479420709561305823,
-    ]);
+
     let x_squared = state[0] * state[0];
     // From the description of alpha_i - (4 * beta_i) != a square modulo p
     // d is taken to be 5. Thus x1^5 is the first element in state output.
     new_state[0] = x_squared * x_squared * state[0];
-    new_state[1] = state[1] * (&x_squared + state[0] + &two);
+    new_state[1] = state[1] * (&x_squared + state[0] + &MONTGOMERY_TWO);
     new_state[2] = state[2]
         * ((state[1] * state[1])
-            + Scalar([
-                25769803770,
-                688531696190609414,
-                14746174755580473312,
-                5219131064341958734,
-            ]) * state[1]
-            + Scalar([
-                34359738360,
-                7066956952823996424,
-                7363736958300930005,
-                6958841419122611646,
-            ]));
+            + MONTGOMERY_THREE * state[1]
+            + MONTGOMERY_FOUR);
     new_state
 }
 

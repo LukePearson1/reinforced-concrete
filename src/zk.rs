@@ -11,6 +11,7 @@ use crate::constants::{MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO};
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
+
 /// This function computes the in-circuit brick function,
 /// as part of the hashing gadget
 pub fn brick_gadget(
@@ -74,6 +75,95 @@ pub fn brick_gadget(
     [var_one, var_two, var_three]
 }
 
+/// In-circuit concrete function as part of the Zelbet hashing
+/// gadget with t = 3 and MDS matrix M = circ(2, 1, 1).
+pub fn concrete_gadget(
+    composer: &mut StandardComposer,
+    state: &[Variable; 3],
+    constants: &[Variable; 3],
+) -> [Variable; 3] {
+
+    let two = composer.add_witness_to_circuit_description(MONTGOMERY_TWO);
+
+    // out0 = 2*u[0] + u[1] + u[2] + c[0];
+
+    let a0 = composer.big_add(
+        (BlsScalar::from(2), state[0]),
+        (BlsScalar::one(), state[1]),
+        Some((BlsScalar::one(), state[2])),
+        BlsScalar::zero(),
+        None,
+    );
+    let out0 = composer.add(
+        (BlsScalar::one(), a0),
+        (BlsScalar::one(), constants[0]),
+        BlsScalar::zero(),
+        None,
+    );
+
+    
+
+    // out1 = u[0] + 2*u[1] + u[2] + c[1];
+    let a1 =
+        composer.mul(BlsScalar::one(), two, state[1], BlsScalar::one(), None);
+    let b1 = composer.big_add(
+        (BlsScalar::one(), a1),
+        (BlsScalar::one(), state[0]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+    let c1 = composer.big_add(
+        (BlsScalar::one(), b1),
+        (BlsScalar::one(), state[2]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+    let out1 = composer.big_add(
+        (BlsScalar::one(), c1),
+        (BlsScalar::one(), constants[1]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+
+    // out2 = u[0] + u[1] + 2*u[2] + c[2];
+    let a2 =
+        composer.mul(BlsScalar::one(), two, state[2], BlsScalar::one(), None);
+    let b2 = composer.big_add(
+        (BlsScalar::one(), a2),
+        (BlsScalar::one(), state[0]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+    let c2 = composer.big_add(
+        (BlsScalar::one(), b2),
+        (BlsScalar::one(), state[1]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+    let out2 = composer.big_add(
+        (BlsScalar::one(), c2),
+        (BlsScalar::one(), constants[2]),
+        Some((BlsScalar::one(), two)),
+        BlsScalar::one(),
+        None,
+    );
+
+    return [out0, out1, out2];
+}
+
+// // This function takes in a hard coded
+// // matrix and turns it into a set 
+// // of variables within the circuit
+// fn convert_matrix_to_variable(matrix: ){
+
+// }
+
+
 // TODO: verify all functions against python outputs
 // for hashing the same values.
 #[cfg(test)]
@@ -95,5 +185,19 @@ mod tests {
             BlsScalar::from(16384),
             Some(BlsScalar::zero()),
         );
+    }
+
+    #[test]
+    fn test_concrete_gadget() {
+        let mut composer = StandardComposer::new();
+        let two = composer.add_witness_to_circuit_description(BlsScalar::from(2));
+        let a0 = composer.big_add(
+            (BlsScalar::from(2), two),
+            (BlsScalar::one(), two),
+            Some((BlsScalar::one(), two)),
+            BlsScalar::zero(),
+            None,
+        );
+        composer.constrain_to_constant(a0, BlsScalar::from(8), None);
     }
 }
