@@ -14,7 +14,9 @@ use crate::constants::{self, DECOMPOSITION_S_I, INVERSES_S_I};
 use bigint::U256 as u256;
 use BLS::BlsScalar as Scalar;
 
-use constants::{SBOX_BLS, VU_256, MONTGOMERY_TWO, MONTGOMERY_THREE, MONTGOMERY_FOUR};
+use constants::{
+    MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO, SBOX_BLS, VU_256,
+};
 
 const DECOMPOSITION_LEN: usize = 27;
 

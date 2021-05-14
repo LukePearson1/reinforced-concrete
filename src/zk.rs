@@ -11,7 +11,6 @@ use crate::constants::{MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO};
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
-
 /// This function computes the in-circuit brick function,
 /// as part of the hashing gadget
 pub fn brick_gadget(
@@ -82,7 +81,6 @@ pub fn concrete_gadget(
     state: &[Variable; 3],
     constants: &[Variable; 3],
 ) -> [Variable; 3] {
-
     let two = composer.add_witness_to_circuit_description(MONTGOMERY_TWO);
 
     // out0 = 2*u[0] + u[1] + u[2] + c[0];
@@ -100,8 +98,6 @@ pub fn concrete_gadget(
         BlsScalar::zero(),
         None,
     );
-
-    
 
     // out1 = u[0] + 2*u[1] + u[2] + c[1];
     let a1 =
@@ -157,12 +153,11 @@ pub fn concrete_gadget(
 }
 
 // // This function takes in a hard coded
-// // matrix and turns it into a set 
+// // matrix and turns it into a set
 // // of variables within the circuit
 // fn convert_matrix_to_variable(matrix: ){
 
 // }
-
 
 // TODO: verify all functions against python outputs
 // for hashing the same values.
@@ -190,7 +185,8 @@ mod tests {
     #[test]
     fn test_concrete_gadget() {
         let mut composer = StandardComposer::new();
-        let two = composer.add_witness_to_circuit_description(BlsScalar::from(2));
+        let two =
+            composer.add_witness_to_circuit_description(BlsScalar::from(2));
         let a0 = composer.big_add(
             (BlsScalar::from(2), two),
             (BlsScalar::one(), two),
