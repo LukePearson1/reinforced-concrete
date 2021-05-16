@@ -144,12 +144,13 @@ pub fn concrete_gadget(
 mod tests {
     use super::*;
     use dusk_plonk::constraint_system::StandardComposer;
+    use crate::helper::gadget_tester;
 
     #[test]
     fn test_bricks_gadget() {
-        let mut composer = StandardComposer::new();
+        let res = gadget_tester(|composer| {
         let one = composer.add_witness_to_circuit_description(BlsScalar::one());
-        let output = brick_gadget(&mut composer, &[one, one, one]);
+        let output = brick_gadget(composer, &[one, one, one]);
         composer.constrain_to_constant(
             output[2],
             // This Bls is taken from a print of the
@@ -159,26 +160,60 @@ mod tests {
             BlsScalar::from(16384),
             Some(BlsScalar::zero()),
         );
+    }, 1000);
+    assert!(res.is_ok());
     }
 
     #[test]
     fn test_concrete_gadget() {
-        let mut composer = StandardComposer::new();
-        let one = composer.add_witness_to_circuit_description(BlsScalar::one());
+        let res = gadget_tester(|composer| {
         let two =
             composer.add_witness_to_circuit_description(BlsScalar::from(2));
-        let three = composer.add_witness_to_circuit_description(BlsScalar::from(3));
-        let state = [one, two, three];
-        let output = concrete_gadget(&mut composer, &state, &[three; 3]);
-        let expected0 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(10));
-        let expected1 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(11));
-        let expected2 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(12));
+        let a0 = composer.big_add(
+            (BlsScalar::from(2), two),
+            (BlsScalar::one(), two),
+            Some((BlsScalar::one(), two)),
+            BlsScalar::zero(),
+            None,
+        );
+        composer.constrain_to_constant(a0, BlsScalar::from(8), None);
+    }, 32);
+    assert!(res.is_ok());
+    }
 
-        composer.assert_equal(output[0], expected0);
-        composer.assert_equal(output[1], expected1);
-        composer.assert_equal(output[2], expected2);
+    #[test]
+    fn test_public_inputs() {
+        let res = gadget_tester(
+            |composer| {
+                let var_one = composer.add_input(BlsScalar::one());
+
+                let should_be_three = composer.big_add(
+                    (BlsScalar::one(), var_one),
+                    (BlsScalar::one(), var_one),
+                    None,
+                    BlsScalar::zero(),
+                    Some(BlsScalar::one()),
+                );
+                composer.constrain_to_constant(
+                    should_be_three,
+                    BlsScalar::from(3),
+                    None,
+                );
+                let should_be_four = composer.big_add(
+                    (BlsScalar::one(), var_one),
+                    (BlsScalar::one(), var_one),
+                    None,
+                    BlsScalar::zero(),
+                    Some(BlsScalar::from(2)),
+                );
+                composer.constrain_to_constant(
+                    should_be_four,
+                    BlsScalar::from(4),
+                    None,
+                );
+            },
+            200,
+        );
+        assert!(res.is_ok());
     }
 }
