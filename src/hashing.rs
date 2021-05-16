@@ -4,8 +4,5 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-pub mod constants;
-pub mod hashing;
-mod test_helper;
-
-pub(crate) use test_helper::gadget_tester;
+pub mod gadgets;
+pub mod zelbet;

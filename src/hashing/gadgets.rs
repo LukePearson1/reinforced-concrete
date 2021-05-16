@@ -72,6 +72,7 @@ pub fn brick_gadget(
     );
 
     [var_one, var_two, var_three]
+
 }
 
 /// In-circuit concrete function as part of the Zelbet hashing
@@ -129,38 +130,31 @@ pub fn concrete_gadget(
     return [out0, out1, out2];
 }
 
-
-
-// // This function takes in a hard coded
-// // matrix and turns it into a set
-// // of variables within the circuit
-// fn convert_matrix_to_variable(matrix: ){
-
-// }
-
 // TODO: verify all functions against python outputs
 // for hashing the same values.
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dusk_plonk::constraint_system::StandardComposer;
-    use crate::helper::gadget_tester;
+    use crate::gadget_tester;
+    use crate::hashing::zelbet::brick;
 
     #[test]
     fn test_bricks_gadget() {
         let res = gadget_tester(|composer| {
         let one = composer.add_witness_to_circuit_description(BlsScalar::one());
         let output = brick_gadget(composer, &[one, one, one]);
+        let output_1 = brick([BlsScalar::one(), BlsScalar::one(), BlsScalar::one()]);
+        composer.check_circuit_satisfied();
         composer.constrain_to_constant(
             output[2],
             // This Bls is taken from a print of the
             // same value in modular_hashing. This
             // is performed as it makes it easier
             // to compare to the obfuscated `variable`
-            BlsScalar::from(16384),
+            output_1[2],
             Some(BlsScalar::zero()),
         );
-    }, 1000);
+    }, 32);
     assert!(res.is_ok());
     }
 
@@ -179,41 +173,5 @@ mod tests {
         composer.constrain_to_constant(a0, BlsScalar::from(8), None);
     }, 32);
     assert!(res.is_ok());
-    }
-
-    #[test]
-    fn test_public_inputs() {
-        let res = gadget_tester(
-            |composer| {
-                let var_one = composer.add_input(BlsScalar::one());
-
-                let should_be_three = composer.big_add(
-                    (BlsScalar::one(), var_one),
-                    (BlsScalar::one(), var_one),
-                    None,
-                    BlsScalar::zero(),
-                    Some(BlsScalar::one()),
-                );
-                composer.constrain_to_constant(
-                    should_be_three,
-                    BlsScalar::from(3),
-                    None,
-                );
-                let should_be_four = composer.big_add(
-                    (BlsScalar::one(), var_one),
-                    (BlsScalar::one(), var_one),
-                    None,
-                    BlsScalar::zero(),
-                    Some(BlsScalar::from(2)),
-                );
-                composer.constrain_to_constant(
-                    should_be_four,
-                    BlsScalar::from(4),
-                    None,
-                );
-            },
-            200,
-        );
-        assert!(res.is_ok());
     }
 }
