@@ -11,13 +11,13 @@
 extern crate dusk_bls12_381 as BLS;
 
 mod bar;
-mod concrete;
 mod brick;
+mod concrete;
 
-use BLS::BlsScalar as Scalar;
-pub use concrete::concrete;
 pub use bar::bar;
 pub use brick::brick;
+pub use concrete::concrete;
+use BLS::BlsScalar as Scalar;
 
 /// Reinforced concrete hash function, taking in the hash parameters and
 /// three-element item to be hashed, and outputting the hash value (three BLS

@@ -4,9 +4,9 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, VU_256, SBOX_BLS};
-use dusk_bls12_381::BlsScalar as Scalar;
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256};
 use bigint::U256 as u256;
+use dusk_bls12_381::BlsScalar as Scalar;
 
 const DECOMPOSITION_LEN: usize = 27;
 
@@ -73,7 +73,7 @@ pub fn bar(state: &mut [Scalar; 3]) {
 
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_bar() {
         let mut input = [Scalar::one(); 3];

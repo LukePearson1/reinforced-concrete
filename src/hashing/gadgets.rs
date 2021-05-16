@@ -71,8 +71,7 @@ pub fn brick_gadget(
         None,
     );
 
-   [var_one, var_two, var_three]
-
+    [var_one, var_two, var_three]
 }
 
 /// In-circuit concrete function as part of the Zelbet hashing
@@ -141,39 +140,50 @@ mod tests {
     #[ignore]
     #[test]
     fn test_bricks_gadget() {
-        let res = gadget_tester(|composer| {
-        let one = composer.add_witness_to_circuit_description(BlsScalar::one());
-        let output = brick_gadget(composer, &[one, one, one]);
-        let output_1 = brick([BlsScalar::one(), BlsScalar::one(), BlsScalar::one()]);
-        println!("1 {:?}", output_1[0]);
-        println!("2 {:?}", output_1[1]);
-        composer.constrain_to_constant(
-            output[0],
-            // This Bls is taken from a print of the
-            // same value in modular_hashing. This
-            // is performed as it makes it easier
-            // to compare to the obfuscated `variable`
-            output_1[0],
-            Some(BlsScalar::zero()),
+        let res = gadget_tester(
+            |composer| {
+                let one = composer
+                    .add_witness_to_circuit_description(BlsScalar::one());
+                let output = brick_gadget(composer, &[one, one, one]);
+                let output_1 = brick([
+                    BlsScalar::one(),
+                    BlsScalar::one(),
+                    BlsScalar::one(),
+                ]);
+                println!("1 {:?}", output_1[0]);
+                println!("2 {:?}", output_1[1]);
+                composer.constrain_to_constant(
+                    output[0],
+                    // This Bls is taken from a print of the
+                    // same value in modular_hashing. This
+                    // is performed as it makes it easier
+                    // to compare to the obfuscated `variable`
+                    output_1[0],
+                    Some(BlsScalar::zero()),
+                );
+            },
+            32,
         );
-    }, 32);
-    assert!(res.is_ok());
+        assert!(res.is_ok());
     }
 
     #[test]
     fn test_concrete_gadget() {
-        let res = gadget_tester(|composer| {
-        let two =
-            composer.add_witness_to_circuit_description(BlsScalar::from(2));
-        let a0 = composer.big_add(
-            (BlsScalar::from(2), two),
-            (BlsScalar::one(), two),
-            Some((BlsScalar::one(), two)),
-            BlsScalar::zero(),
-            None,
+        let res = gadget_tester(
+            |composer| {
+                let two = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(2));
+                let a0 = composer.big_add(
+                    (BlsScalar::from(2), two),
+                    (BlsScalar::one(), two),
+                    Some((BlsScalar::one(), two)),
+                    BlsScalar::zero(),
+                    None,
+                );
+                composer.constrain_to_constant(a0, BlsScalar::from(8), None);
+            },
+            32,
         );
-        composer.constrain_to_constant(a0, BlsScalar::from(8), None);
-    }, 32);
-    assert!(res.is_ok());
+        assert!(res.is_ok());
     }
 }

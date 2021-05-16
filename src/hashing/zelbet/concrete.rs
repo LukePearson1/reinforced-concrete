@@ -26,7 +26,7 @@ pub fn concrete(
 
 mod tests {
     use super::*;
-    use crate::constants::{MATRIX_BLS, CONSTANTS_BLS};
+    use crate::constants::{CONSTANTS_BLS, MATRIX_BLS};
 
     #[test]
     fn test_concrete() {

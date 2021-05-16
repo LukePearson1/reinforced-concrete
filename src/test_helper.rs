@@ -5,8 +5,8 @@
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
 use dusk_plonk::prelude::*;
-use rand_core::OsRng;
 use dusk_plonk::proof_system::{Prover, Verifier};
+use rand_core::OsRng;
 
 /// Takes a generic gadget function with no auxillary input and
 /// tests whether it passes an end-to-end test
