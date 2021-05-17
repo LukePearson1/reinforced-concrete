@@ -7,7 +7,7 @@
 //! This file contains the circuit implementation of the
 //! zelbet hash function
 
-use crate::constants::{MONTGOMERY_TWO};
+use crate::constants::MONTGOMERY_TWO;
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
