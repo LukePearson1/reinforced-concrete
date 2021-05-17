@@ -10,3 +10,4 @@ edition = "2018"
 dusk-bls12_381 = {version = "0.6", default-features = false}
 bigint = "4.4.3"
 dusk-plonk = {version = "0.7", branch = "modularise_plookup"}
+rand_core = "0.5"
