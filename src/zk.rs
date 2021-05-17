@@ -81,10 +81,7 @@ pub fn concrete_gadget(
     state: &[Variable; 3],
     constants: &[Variable; 3],
 ) -> [Variable; 3] {
-    let two = composer.add_witness_to_circuit_description(MONTGOMERY_TWO);
-
     // out0 = 2*u[0] + u[1] + u[2] + c[0];
-
     let a0 = composer.big_add(
         (BlsScalar::from(2), state[0]),
         (BlsScalar::one(), state[1]),
@@ -100,57 +97,39 @@ pub fn concrete_gadget(
     );
 
     // out1 = u[0] + 2*u[1] + u[2] + c[1];
-    let a1 =
-        composer.mul(BlsScalar::one(), two, state[1], BlsScalar::one(), None);
-    let b1 = composer.big_add(
-        (BlsScalar::one(), a1),
+    let a1 = composer.big_add(
         (BlsScalar::one(), state[0]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
+        (BlsScalar::from(2), state[1]),
+        Some((BlsScalar::one(), state[2])),
+        BlsScalar::zero(),
         None,
     );
-    let c1 = composer.big_add(
-        (BlsScalar::one(), b1),
-        (BlsScalar::one(), state[2]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let out1 = composer.big_add(
-        (BlsScalar::one(), c1),
+    let out1 = composer.add(
+        (BlsScalar::one(), a1),
         (BlsScalar::one(), constants[1]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
+        BlsScalar::zero(),
         None,
     );
 
     // out2 = u[0] + u[1] + 2*u[2] + c[2];
-    let a2 =
-        composer.mul(BlsScalar::one(), two, state[2], BlsScalar::one(), None);
-    let b2 = composer.big_add(
-        (BlsScalar::one(), a2),
+    let a2 = composer.big_add(
         (BlsScalar::one(), state[0]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
-        None,
-    );
-    let c2 = composer.big_add(
-        (BlsScalar::one(), b2),
         (BlsScalar::one(), state[1]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
+        Some((BlsScalar::from(2), state[2])),
+        BlsScalar::zero(),
         None,
     );
-    let out2 = composer.big_add(
-        (BlsScalar::one(), c2),
+    let out2 = composer.add(
+        (BlsScalar::one(), a2),
         (BlsScalar::one(), constants[2]),
-        Some((BlsScalar::one(), two)),
-        BlsScalar::one(),
+        BlsScalar::zero(),
         None,
     );
 
     return [out0, out1, out2];
 }
+
+
 
 // // This function takes in a hard coded
 // // matrix and turns it into a set
@@ -185,15 +164,21 @@ mod tests {
     #[test]
     fn test_concrete_gadget() {
         let mut composer = StandardComposer::new();
+        let one = composer.add_witness_to_circuit_description(BlsScalar::one());
         let two =
             composer.add_witness_to_circuit_description(BlsScalar::from(2));
-        let a0 = composer.big_add(
-            (BlsScalar::from(2), two),
-            (BlsScalar::one(), two),
-            Some((BlsScalar::one(), two)),
-            BlsScalar::zero(),
-            None,
-        );
-        composer.constrain_to_constant(a0, BlsScalar::from(8), None);
+        let three = composer.add_witness_to_circuit_description(BlsScalar::from(3));
+        let state = [one, two, three];
+        let output = concrete_gadget(&mut composer, &state, &[three; 3]);
+        let expected0 =
+            composer.add_witness_to_circuit_description(BlsScalar::from(10));
+        let expected1 =
+            composer.add_witness_to_circuit_description(BlsScalar::from(11));
+        let expected2 =
+            composer.add_witness_to_circuit_description(BlsScalar::from(12));
+
+        composer.assert_equal(output[0], expected0);
+        composer.assert_equal(output[1], expected1);
+        composer.assert_equal(output[2], expected2);
     }
 }
