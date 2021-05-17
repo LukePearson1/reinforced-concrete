@@ -7,7 +7,7 @@
 //! This file contains the circuit implementation of the
 //! zelbet hash function
 
-use crate::constants::{MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO};
+use crate::constants::{MONTGOMERY_TWO};
 use dusk_plonk::constraint_system::Variable;
 use dusk_plonk::prelude::*;
 
@@ -23,16 +23,21 @@ pub fn brick_gadget(
         BlsScalar::one(),
         state[0],
         state[0],
-        BlsScalar::one(),
+        BlsScalar::zero(),
         None,
     );
-
-    let var_one = composer.big_mul(
+    let x_fourth = composer.mul(
         BlsScalar::one(),
         x_squared,
         x_squared,
-        Some((BlsScalar::one(), state[0])),
+        BlsScalar::zero(),
+        None,
+    );
+    let var_one = composer.mul(
         BlsScalar::one(),
+        x_fourth,
+        state[0],
+        BlsScalar::zero(),
         None,
     );
 
@@ -40,34 +45,37 @@ pub fn brick_gadget(
         (BlsScalar::one(), x_squared),
         (BlsScalar::one(), state[0]),
         Some((BlsScalar::one(), two)),
+        BlsScalar::zero(),
+        None,
+    );
+    let var_two = composer.mul(
         BlsScalar::one(),
+        state[1],
+        tuple,
+        BlsScalar::zero(),
         None,
     );
 
-    let var_two =
-        composer.mul(BlsScalar::one(), state[1], tuple, BlsScalar::one(), None);
-
-    let three = composer.add_witness_to_circuit_description(MONTGOMERY_THREE);
-
-    let four = composer.add_witness_to_circuit_description(MONTGOMERY_FOUR);
-
-    // x3 ·(x2 +α2 ·x2 +β2))
-
-    let tuple_one =
-        composer.mul(BlsScalar::one(), three, state[1], BlsScalar::one(), None);
-    let tuple_two = composer.big_add(
-        (BlsScalar::one(), tuple_one),
-        (BlsScalar::one(), four),
-        Some((BlsScalar::one(), state[1])),
+    // x3 ·(x2^2 +α2 ·x2 +β2))
+    let y_squared_plus_4 = composer.mul(
         BlsScalar::one(),
+        state[1],
+        state[1],
+        BlsScalar::from(4),
         None,
     );
-
+    let tuple_one = composer.big_add(
+        (BlsScalar::one(), y_squared_plus_4),
+        (BlsScalar::from(3), state[1]),
+        None,
+        BlsScalar::zero(),
+        None,
+    );
     let var_three = composer.mul(
         BlsScalar::one(),
-        tuple_two,
+        tuple_one,
         state[2],
-        BlsScalar::one(),
+        BlsScalar::zero(),
         None,
     );
 
@@ -126,7 +134,7 @@ pub fn concrete_gadget(
         None,
     );
 
-    return [out0, out1, out2];
+    [out0, out1, out2]
 }
 
 // TODO: verify all functions against python outputs
@@ -134,33 +142,47 @@ pub fn concrete_gadget(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gadget_tester;
-    use crate::hashing::zelbet::brick;
+    use crate::{constants::MATRIX_BLS, hashing::zelbet::brick};
+    use crate::{gadget_tester, hashing::zelbet::concrete};
 
-    #[ignore]
     #[test]
     fn test_bricks_gadget() {
         let res = gadget_tester(
             |composer| {
-                let one = composer
-                    .add_witness_to_circuit_description(BlsScalar::one());
-                let output = brick_gadget(composer, &[one, one, one]);
+                let two = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(2));
+                let three = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(3));
+                let four = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(4));
+                let output = brick_gadget(composer, &[two, three, four]);
                 let output_1 = brick([
-                    BlsScalar::one(),
-                    BlsScalar::one(),
-                    BlsScalar::one(),
+                    BlsScalar::from(2),
+                    BlsScalar::from(3),
+                    BlsScalar::from(4),
                 ]);
-                println!("1 {:?}", output_1[0]);
-                println!("2 {:?}", output_1[1]);
-                composer.constrain_to_constant(
-                    output[0],
-                    // This Bls is taken from a print of the
-                    // same value in modular_hashing. This
-                    // is performed as it makes it easier
-                    // to compare to the obfuscated `variable`
-                    output_1[0],
-                    Some(BlsScalar::zero()),
-                );
+                // Check in circuit result against out of circuit result
+                for i in 0..3 {
+                    composer.constrain_to_constant(
+                        output[i],
+                        output_1[i],
+                        None,
+                    );
+                }
+
+                // Check in circuit result against expected result
+                let expected_result = [
+                    BlsScalar::from(32),
+                    BlsScalar::from(24),
+                    BlsScalar::from(88),
+                ];
+                for i in 0..3 {
+                    composer.constrain_to_constant(
+                        output[i],
+                        expected_result[i],
+                        None,
+                    );
+                }
             },
             32,
         );
@@ -171,16 +193,42 @@ mod tests {
     fn test_concrete_gadget() {
         let res = gadget_tester(
             |composer| {
+                let one = composer
+                    .add_witness_to_circuit_description(BlsScalar::one());
                 let two = composer
                     .add_witness_to_circuit_description(BlsScalar::from(2));
-                let a0 = composer.big_add(
-                    (BlsScalar::from(2), two),
-                    (BlsScalar::one(), two),
-                    Some((BlsScalar::one(), two)),
-                    BlsScalar::zero(),
-                    None,
+                let three = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(3));
+                let output =
+                    concrete_gadget(composer, &[one, two, three], &[two; 3]);
+                let output_1 = concrete(
+                    [BlsScalar::one(), BlsScalar::from(2), BlsScalar::from(3)],
+                    MATRIX_BLS,
+                    [BlsScalar::from(2); 3],
                 );
-                composer.constrain_to_constant(a0, BlsScalar::from(8), None);
+
+                // Check in circuit result against out of circuit result
+                for i in 0..3 {
+                    composer.constrain_to_constant(
+                        output[i],
+                        output_1[i],
+                        None,
+                    );
+                }
+
+                // Check in circuit result against expected result
+                let expected_result = [
+                    BlsScalar::from(9),
+                    BlsScalar::from(10),
+                    BlsScalar::from(11),
+                ];
+                for i in 0..3 {
+                    composer.constrain_to_constant(
+                        output[i],
+                        expected_result[i],
+                        None,
+                    );
+                }
             },
             32,
         );
