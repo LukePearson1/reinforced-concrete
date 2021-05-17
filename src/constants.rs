@@ -1127,3 +1127,16 @@ pub const MONTGOMERY_FOUR: Scalar = Scalar([
     7363736958300930005,
     6958841419122611646,
 ]);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_inverses_correct() {
+        for k in 0..27 {
+            let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
+            assert_eq!(Scalar::from_raw(product.0), Scalar::one());
+        }
+    }
+}

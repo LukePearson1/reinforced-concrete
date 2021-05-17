@@ -129,56 +129,61 @@ pub fn concrete_gadget(
     return [out0, out1, out2];
 }
 
-
-
-// // This function takes in a hard coded
-// // matrix and turns it into a set
-// // of variables within the circuit
-// fn convert_matrix_to_variable(matrix: ){
-
-// }
-
 // TODO: verify all functions against python outputs
 // for hashing the same values.
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dusk_plonk::constraint_system::StandardComposer;
+    use crate::gadget_tester;
+    use crate::hashing::zelbet::brick;
 
+    #[ignore]
     #[test]
     fn test_bricks_gadget() {
-        let mut composer = StandardComposer::new();
-        let one = composer.add_witness_to_circuit_description(BlsScalar::one());
-        let output = brick_gadget(&mut composer, &[one, one, one]);
-        composer.constrain_to_constant(
-            output[2],
-            // This Bls is taken from a print of the
-            // same value in modular_hashing. This
-            // is performed as it makes it easier
-            // to compare to the obfuscated `variable`
-            BlsScalar::from(16384),
-            Some(BlsScalar::zero()),
+        let res = gadget_tester(
+            |composer| {
+                let one = composer
+                    .add_witness_to_circuit_description(BlsScalar::one());
+                let output = brick_gadget(composer, &[one, one, one]);
+                let output_1 = brick([
+                    BlsScalar::one(),
+                    BlsScalar::one(),
+                    BlsScalar::one(),
+                ]);
+                println!("1 {:?}", output_1[0]);
+                println!("2 {:?}", output_1[1]);
+                composer.constrain_to_constant(
+                    output[0],
+                    // This Bls is taken from a print of the
+                    // same value in modular_hashing. This
+                    // is performed as it makes it easier
+                    // to compare to the obfuscated `variable`
+                    output_1[0],
+                    Some(BlsScalar::zero()),
+                );
+            },
+            32,
         );
+        assert!(res.is_ok());
     }
 
     #[test]
     fn test_concrete_gadget() {
-        let mut composer = StandardComposer::new();
-        let one = composer.add_witness_to_circuit_description(BlsScalar::one());
-        let two =
-            composer.add_witness_to_circuit_description(BlsScalar::from(2));
-        let three = composer.add_witness_to_circuit_description(BlsScalar::from(3));
-        let state = [one, two, three];
-        let output = concrete_gadget(&mut composer, &state, &[three; 3]);
-        let expected0 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(10));
-        let expected1 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(11));
-        let expected2 =
-            composer.add_witness_to_circuit_description(BlsScalar::from(12));
-
-        composer.assert_equal(output[0], expected0);
-        composer.assert_equal(output[1], expected1);
-        composer.assert_equal(output[2], expected2);
+        let res = gadget_tester(
+            |composer| {
+                let two = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(2));
+                let a0 = composer.big_add(
+                    (BlsScalar::from(2), two),
+                    (BlsScalar::one(), two),
+                    Some((BlsScalar::one(), two)),
+                    BlsScalar::zero(),
+                    None,
+                );
+                composer.constrain_to_constant(a0, BlsScalar::from(8), None);
+            },
+            32,
+        );
+        assert!(res.is_ok());
     }
 }
