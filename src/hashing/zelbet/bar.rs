@@ -45,10 +45,10 @@ pub fn bar(state: &mut [Scalar; 3]) {
         // in Montgomery form by default due to BLS library; but the
         // modular operations won't work as intended if left like this)
         let mut intermediate = u256(scalar.reduce().0);
-        let mut value = u256::zero();
+        let mut remainder = u256::zero();
 
         (0..27).for_each(|k| {
-            value = intermediate % DECOMPOSITION_S_I[k];
+            remainder = intermediate % DECOMPOSITION_S_I[k];
 
             // Reduce intermediate representation
             match k < 26 {
@@ -56,14 +56,14 @@ pub fn bar(state: &mut [Scalar; 3]) {
                     // Convert to BLS scalar form to make use of fast modular
                     // multiplication (rather than dividing)
                     let intermediate_scalar: Scalar =
-                        Scalar((intermediate - value).0) * INVERSES_S_I[k];
+                        Scalar((intermediate - remainder).0) * INVERSES_S_I[k];
                     intermediate = u256(intermediate_scalar.0);
                 }
-                false => value = intermediate,
+                false => remainder = intermediate,
             };
 
             // 2. S-box
-            nibbles[k] = small_s_box(value);
+            nibbles[k] = small_s_box(remainder);
         });
 
         // 3. Composition

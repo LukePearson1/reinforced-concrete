@@ -7,8 +7,9 @@
 //! This file contains the circuit implementation of the
 //! zelbet hash function
 
-use crate::constants::MONTGOMERY_TWO;
-use dusk_plonk::constraint_system::Variable;
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, MONTGOMERY_TWO};
+use bigint::U256 as u256;
+use dusk_plonk::constraint_system::{Variable, StandardComposer};
 use dusk_plonk::prelude::*;
 
 /// This function computes the in-circuit brick function,
@@ -135,6 +136,23 @@ pub fn concrete_gadget(
     );
 
     [out0, out1, out2]
+}
+
+/// Bar function
+pub fn bar(composer: &mut StandardComposer, input: Variable) -> Variable {
+    let mut tuple = composer.decomposition_gadget(input, DECOMPOSITION_S_I, INVERSES_S_I);
+
+    let s_box_table = PlookupTable3Arity::s_box_table();
+    (0..27).for_each(|k| {
+        tuple[k] = composer.s_box(tuple[k], s_box_table);
+    });
+
+    let result = BlsScalar((0..27).rev().fold(u256::zero(), |single, k| match k > 0 {
+        true => (single + tuple[k]) * DECOMPOSITION_S_I[k-1],
+        false => single + tuple[k],
+    }).0);
+
+    composer.add_input(result)
 }
 
 // TODO: verify all functions against python outputs
