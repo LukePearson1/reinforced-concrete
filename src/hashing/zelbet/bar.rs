@@ -4,7 +4,9 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256, BLS_SCALAR_REAL};
+use crate::constants::{
+    BLS_SCALAR_REAL, DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256,
+};
 use bigint::U256 as u256;
 use dusk_bls12_381::BlsScalar as Scalar;
 
@@ -131,7 +133,6 @@ mod tests {
         for k in 0..27 {
             let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
-
         }
     }
 }
