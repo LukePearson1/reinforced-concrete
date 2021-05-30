@@ -5,23 +5,10 @@
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
 //! Here the constants and fundamental building blocks, which make up the moving
-//! parts of the hash function Reinforced Concrete, are defined.
+//! parts of the hash function Reinforced Concrete, are define
 
-extern crate dusk_bls12_381 as BLS;
 use bigint::U256 as u256;
-use BLS::BlsScalar as Scalar;
-use dusk_plonk::plookup::PlookupTable3Arity;
-
-impl PlookupTable3Arity {
-    pub fn s_box_table() -> Self {
-        let s_box = Vec::with_capacity(659);
-        (0..659).for_each(|k| {
-            s_box.push(SBOX_BLS[k]);
-        });
-
-        PlookupTable3Arity(s_box)
-    }
-}
+use dusk_plonk::bls12_381::BlsScalar as Scalar;
 
 pub const V_BLS: Scalar = Scalar([661, 0, 0, 0]);
 pub const VU_256: u256 = u256([661, 0, 0, 0]);
