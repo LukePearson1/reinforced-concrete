@@ -4,7 +4,7 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256};
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256, BLS_SCALAR_REAL};
 use bigint::U256 as u256;
 use dusk_bls12_381::BlsScalar as Scalar;
 
@@ -78,9 +78,60 @@ mod tests {
     fn test_bar() {
         let mut input = [Scalar::one(); 3];
         bar(&mut input);
-        let mut breakdown = [u256([248, 0, 0, 0]); 27];
-        breakdown[0] = u256([131, 0, 0, 0]);
+        let mut breakdown = [u256([15, 0, 0, 0]); 27];
+        breakdown[0] = u256([187, 0, 0, 0]);
         let composed = compute_whole_representation(breakdown);
         assert_eq!(input[0], composed);
+    }
+
+    #[test]
+    fn test_field_size_decomposition() {
+        let size = compute_whole_representation(BLS_SCALAR_REAL);
+        assert_eq!(size + Scalar::one(), Scalar::zero());
+    }
+    #[test]
+    fn test_bar_minus_one() {
+        let mut input = [-Scalar::one(); 3];
+        bar(&mut input);
+        let breakdown = [
+            u256([660, 0, 0, 0]),
+            u256([660, 0, 0, 0]),
+            u256([673, 0, 0, 0]),
+            u256([663, 0, 0, 0]),
+            u256([674, 0, 0, 0]),
+            u256([682, 0, 0, 0]),
+            u256([687, 0, 0, 0]),
+            u256([683, 0, 0, 0]),
+            u256([669, 0, 0, 0]),
+            u256([684, 0, 0, 0]),
+            u256([672, 0, 0, 0]),
+            u256([666, 0, 0, 0]),
+            u256([680, 0, 0, 0]),
+            u256([662, 0, 0, 0]),
+            u256([686, 0, 0, 0]),
+            u256([668, 0, 0, 0]),
+            u256([661, 0, 0, 0]),
+            u256([678, 0, 0, 0]),
+            u256([692, 0, 0, 0]),
+            u256([686, 0, 0, 0]),
+            u256([689, 0, 0, 0]),
+            u256([660, 0, 0, 0]),
+            u256([690, 0, 0, 0]),
+            u256([687, 0, 0, 0]),
+            u256([683, 0, 0, 0]),
+            u256([674, 0, 0, 0]),
+            u256([678, 0, 0, 0]),
+        ];
+        let composed = compute_whole_representation(breakdown);
+        assert_eq!(input[0], composed);
+    }
+
+    #[test]
+    fn test_inverses() {
+        for k in 0..27 {
+            let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
+            assert_eq!(Scalar::from_raw(product.0), Scalar::one());
+
+        }
     }
 }
