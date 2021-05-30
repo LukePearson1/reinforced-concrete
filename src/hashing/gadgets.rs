@@ -9,7 +9,7 @@
 
 use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, MONTGOMERY_TWO};
 use bigint::U256 as u256;
-use dusk_plonk::constraint_system::{Variable, StandardComposer};
+use dusk_plonk::constraint_system::{StandardComposer, Variable};
 use dusk_plonk::prelude::*;
 
 /// This function computes the in-circuit brick function,
@@ -138,22 +138,23 @@ pub fn concrete_gadget(
     [out0, out1, out2]
 }
 
-/// Bar function
-pub fn bar(composer: &mut StandardComposer, input: Variable) -> Variable {
-    let mut tuple = composer.decomposition_gadget(input, DECOMPOSITION_S_I, INVERSES_S_I);
-
-    let s_box_table = PlookupTable3Arity::s_box_table();
-    (0..27).for_each(|k| {
-        tuple[k] = composer.s_box(tuple[k], s_box_table);
-    });
-
-    let result = BlsScalar((0..27).rev().fold(u256::zero(), |single, k| match k > 0 {
-        true => (single + tuple[k]) * DECOMPOSITION_S_I[k-1],
-        false => single + tuple[k],
-    }).0);
-
-    composer.add_input(result)
-}
+// /// Bar function
+// pub fn bar(composer: &mut StandardComposer, input: Variable) -> Variable {
+//     let mut tuple = composer.decomposition_gadget(input, DECOMPOSITION_S_I,
+// INVERSES_S_I);
+//
+//     let s_box_table = PlookupTable3Arity::s_box_table();
+//     (0..27).for_each(|k| {
+//         tuple[k] = composer.s_box(tuple[k], s_box_table);
+//     });
+//
+//     let result = BlsScalar((0..27).rev().fold(u256::zero(), |single, k| match
+// k > 0 {         true => (single + tuple[k]) * DECOMPOSITION_S_I[k-1],
+//         false => single + tuple[k],
+//     }).0);
+//
+//     composer.add_input(result)
+// }
 
 // TODO: verify all functions against python outputs
 // for hashing the same values.
@@ -247,6 +248,32 @@ mod tests {
                         None,
                     );
                 }
+            },
+            32,
+        );
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_size_gadget() {
+        let res = gadget_tester(
+            |composer| {
+                let one = composer
+                    .add_witness_to_circuit_description(BlsScalar::one());
+                let two = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(2));
+                let three = composer
+                    .add_witness_to_circuit_description(BlsScalar::from(3));
+                let output =
+                    concrete_gadget(composer, &[one, two, three], &[two; 3]);
+                let output_1 = concrete(
+                    [BlsScalar::one(), BlsScalar::from(2), BlsScalar::from(3)],
+                    MATRIX_BLS,
+                    [BlsScalar::from(2); 3],
+                );
+                println!("{:?}", composer.circuit_size());
+                let output_2 = brick_gadget(composer, &[one, two, three]);
+                println!("{:?}", composer.circuit_size());
             },
             32,
         );

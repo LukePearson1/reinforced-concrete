@@ -6,9 +6,8 @@
 
 //! This module contains the fundamental functions required for hashing,
 //! using lookups. These are the three main functions of Zelbet:
-//! Bricks, Concrete and Bars.
 
-extern crate dusk_bls12_381 as BLS;
+use dusk_plonk::bls12_381::BlsScalar as Scalar;
 
 mod bar;
 mod brick;
@@ -17,7 +16,6 @@ mod concrete;
 pub use bar::bar;
 pub use brick::brick;
 pub use concrete::concrete;
-use BLS::BlsScalar as Scalar;
 
 /// Reinforced concrete hash function, taking in the hash parameters and
 /// three-element item to be hashed, and outputting the hash value (three BLS

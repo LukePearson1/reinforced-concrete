@@ -5,7 +5,7 @@
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
 use crate::constants::{MONTGOMERY_FOUR, MONTGOMERY_THREE, MONTGOMERY_TWO};
-use dusk_bls12_381::BlsScalar as Scalar;
+use dusk_plonk::bls12_381::BlsScalar as Scalar;
 
 // Element-wise power function
 // α1 = 1

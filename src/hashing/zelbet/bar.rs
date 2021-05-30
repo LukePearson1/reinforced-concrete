@@ -6,7 +6,7 @@
 
 use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256};
 use bigint::U256 as u256;
-use dusk_bls12_381::BlsScalar as Scalar;
+use dusk_plonk::bls12_381::BlsScalar as Scalar;
 
 const DECOMPOSITION_LEN: usize = 27;
 
