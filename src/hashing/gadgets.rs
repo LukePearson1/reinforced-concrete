@@ -7,7 +7,12 @@
 //! This file contains the circuit implementation of the
 //! zelbet hash function
 
+<<<<<<< HEAD
 use crate::constants::DECOMPOSITION_S_I;
+=======
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, MONTGOMERY_TWO};
+use bigint::U256 as u256;
+>>>>>>> acc8b02e8ff9a706e20e0d23ff8e1a2461ec998d
 use dusk_plonk::constraint_system::{StandardComposer, Variable};
 use dusk_plonk::prelude::*;
 
@@ -136,6 +141,7 @@ pub fn concrete_gadget(
     [out0, out1, out2]
 }
 
+<<<<<<< HEAD
 /// Bar function
 pub fn bar_gadget(
     composer: &mut StandardComposer,
@@ -223,9 +229,43 @@ pub fn bar_gadget(
 
     accumulator_var
 }
+=======
+// /// Bar function
+// pub fn bar_gadget(composer: &mut StandardComposer, input: Variable) -> Variable {
+//     let mut tuple = composer.decomposition_gadget(input, DECOMPOSITION_S_I, INVERSES_S_I);
 
-// TODO: verify all functions against python outputs
-// for hashing the same values.
+//     // let s_box_table = PlookupTable4Arity::s_box_table();
+//     // composer.lookup_table = s_box_table;
+//     (0..27).for_each(|k| {
+//         tuple[k] = composer.s_box(tuple[k]);
+//     });
+
+//     let mut accumulator_var = composer.add_input(BlsScalar::zero());
+//     (1..27).rev().for_each(|k| {
+//         if k == 26 {
+//             accumulator_var = composer.big_add(
+//                 (BlsScalar::one(), accumulator_var),
+//                 (BlsScalar::one(), tuple[k]),
+//                 None,
+//                 BlsScalar::zero(),
+//                 None,
+//             );
+//         }
+//         let s_i_var = composer.add_input(BlsScalar::from_raw(DECOMPOSITION_S_I[k - 1].0));
+//         accumulator_var = composer.big_mul(
+//             BlsScalar::one(),
+//             accumulator_var,
+//             s_i_var,
+//             Some((BlsScalar::one(), tuple[k - 1])),
+//             BlsScalar::zero(),
+//             None,
+//         );
+//     });
+
+//     accumulator_var
+// }
+>>>>>>> acc8b02e8ff9a706e20e0d23ff8e1a2461ec998d
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -379,4 +419,26 @@ mod tests {
         );
         assert!(res.is_ok());
     }
+
+    // #[test]
+    // fn test_bar_gadget() {
+    //     let res = gadget_tester(
+    //         |composer| {
+    //             let one = composer.add_input(BlsScalar::one());
+    //             // Check that the output is what we expected (in Montgomery)
+    //             let output = bar_gadget(composer, one);
+    //             let expected = BlsScalar([
+    //                 2921300856332839541,
+    //                 8943181998193365483,
+    //                 12554333934768435622,
+    //                 1625679107374292725,
+    //             ]);
+    //             composer.constrain_to_constant(output, expected, BlsScalar::zero());
+    //             println!("circuit is {:?}", composer.circuit_size());
+    //         },
+    //         800,
+    //     );
+    //     assert!(res.is_ok());
+    // }
+
 }

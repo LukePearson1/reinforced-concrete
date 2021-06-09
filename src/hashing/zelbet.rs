@@ -6,7 +6,6 @@
 
 //! This module contains the fundamental functions required for hashing,
 //! using lookups. These are the three main functions of Zelbet:
-//! Bricks, Concrete and Bars.
 
 mod bar;
 mod brick;
@@ -15,7 +14,6 @@ mod concrete;
 pub use bar::bar;
 pub use brick::brick;
 pub use concrete::concrete;
-// use dusk_bls12_381::BlsScalar;
 use super::gadgets::*;
 use crate::constants::{
     CONSTANTS_BLS, MONTGOMERY_TWO, S_I_DECOMPOSITION_MONTGOMERY,
