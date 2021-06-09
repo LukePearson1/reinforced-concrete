@@ -4,14 +4,14 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256};
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_U256, VU_256};
 use bigint::U256 as u256;
-use dusk_bls12_381::BlsScalar as Scalar;
+use dusk_plonk::prelude::BlsScalar as Scalar;
 
 const DECOMPOSITION_LEN: usize = 27;
 
 // Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
-// element
+// Scalar element in Montgomery form
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
 ) -> Scalar {
@@ -20,7 +20,10 @@ fn compute_whole_representation(
         (0..DECOMPOSITION_LEN)
             .rev()
             .fold(u256::zero(), |single, k| match k > 0 {
-                true => (single + decomposition[k]) * DECOMPOSITION_S_I[k - 1],
+                true => {
+                    (single + decomposition[k])
+                        * u256(DECOMPOSITION_S_I[k - 1].0)
+                }
                 false => single + decomposition[k],
             })
             .0,
@@ -30,7 +33,7 @@ fn compute_whole_representation(
 // S-box used in bar function
 fn small_s_box(x: u256) -> u256 {
     match x < VU_256 {
-        true => SBOX_BLS[x.as_u32() as usize],
+        true => SBOX_U256[x.as_u32() as usize],
         false => x,
     }
 }
@@ -48,13 +51,12 @@ pub fn bar(state: &mut [Scalar; 3]) {
         let mut remainder = u256::zero();
 
         (0..27).for_each(|k| {
-            remainder = intermediate % DECOMPOSITION_S_I[k];
-
             // Reduce intermediate representation
             match k < 26 {
                 true => {
                     // Convert to BLS scalar form to make use of fast modular
                     // multiplication (rather than dividing)
+                    remainder = intermediate % u256(DECOMPOSITION_S_I[k].0);
                     let intermediate_scalar: Scalar =
                         Scalar((intermediate - remainder).0) * INVERSES_S_I[k];
                     intermediate = u256(intermediate_scalar.0);
@@ -78,8 +80,8 @@ mod tests {
     fn test_bar() {
         let mut input = [Scalar::one(); 3];
         bar(&mut input);
-        let mut breakdown = [u256([248, 0, 0, 0]); 27];
-        breakdown[0] = u256([131, 0, 0, 0]);
+        let mut breakdown = [u256([15, 0, 0, 0]); 27];
+        breakdown[0] = u256([187, 0, 0, 0]);
         let composed = compute_whole_representation(breakdown);
         assert_eq!(input[0], composed);
     }

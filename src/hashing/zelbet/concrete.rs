@@ -4,7 +4,7 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use dusk_bls12_381::BlsScalar as Scalar;
+use dusk_plonk::prelude::BlsScalar as Scalar;
 
 // Apply affine transformation to state via MDS matrix multiplication
 pub fn concrete(

@@ -9,5 +9,7 @@ edition = "2018"
 [dependencies]
 dusk-bls12_381 = {version = "0.8.0", default-features = false}
 bigint = "4.4.3"
-dusk-plonk = {version = "0.7", branch = "modularise_plookup"}
+dusk-plonk = { git = "https://github.com/dusk-network/plonk", branch = "fixed_hash_tables" }
 rand_core = "0.5"
+rand = "0.7"
+anyhow = "1.0.32"
