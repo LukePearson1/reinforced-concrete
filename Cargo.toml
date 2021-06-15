@@ -12,3 +12,4 @@ dusk-plonk = { git = "https://github.com/dusk-network/plonk", branch = "fixed_ha
 rand_core = "0.5"
 rand = "0.7"
 anyhow = "1.0.32"
+dusk-bytes = "0.1.4"

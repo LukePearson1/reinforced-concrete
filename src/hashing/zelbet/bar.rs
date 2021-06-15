@@ -10,8 +10,8 @@ use dusk_plonk::prelude::BlsScalar as Scalar;
 
 const DECOMPOSITION_LEN: usize = 27;
 
-// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
-// Scalar element in Montgomery form
+/// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
+/// scalar element in Montgomery form (out of circuit)
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
 ) -> Scalar {
@@ -30,7 +30,7 @@ fn compute_whole_representation(
     )
 }
 
-// S-box used in bar function
+/// S-box used in bar function (out of circuit)
 fn small_s_box(x: u256) -> u256 {
     match x < VU_256 {
         true => SBOX_U256[x.as_u32() as usize],
@@ -38,15 +38,16 @@ fn small_s_box(x: u256) -> u256 {
     }
 }
 
-// Lookup-table-based Sbox
+/// Bar function (out of circuit)
 pub fn bar(state: &mut [Scalar; 3]) {
     let mut nibbles = [u256::zero(); 27];
 
     for scalar in state.iter_mut() {
+        // println!("input is {:?}", scalar.reduce().0);
         // 1. Decomposition
         // Get state value that we are decomposing in non-Montgomery form (comes
         // in Montgomery form by default due to BLS library; but the
-        // modular operations won't work as intended if left like this)
+        // modular operations can't be done if left like this)
         let mut intermediate = u256(scalar.reduce().0);
         let mut remainder = u256::zero();
 
@@ -54,9 +55,10 @@ pub fn bar(state: &mut [Scalar; 3]) {
             // Reduce intermediate representation
             match k < 26 {
                 true => {
-                    // Convert to BLS scalar form to make use of fast modular
-                    // multiplication (rather than dividing)
                     remainder = intermediate % u256(DECOMPOSITION_S_I[k].0);
+                    // Ensure s_i inverses are in Montgomery form, because BLS
+                    // scalar multiplication removes a
+                    // factor of 2^512
                     let intermediate_scalar: Scalar =
                         Scalar((intermediate - remainder).0) * INVERSES_S_I[k];
                     intermediate = u256(intermediate_scalar.0);
@@ -84,5 +86,13 @@ mod tests {
         breakdown[0] = u256([187, 0, 0, 0]);
         let composed = compute_whole_representation(breakdown);
         assert_eq!(input[0], composed);
+    }
+
+    #[test]
+    fn test_zelbet_out_of_circuit() {
+        let minus_five = -Scalar::from(5);
+        let mut input = [minus_five; 3];
+        bar(&mut input);
+        println!("output {:?}", input[0].0);
     }
 }

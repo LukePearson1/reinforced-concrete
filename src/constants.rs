@@ -10,10 +10,49 @@
 use bigint::U256 as u256;
 use dusk_plonk::prelude::BlsScalar as Scalar;
 
-pub const V_BLS: Scalar = Scalar([661, 0, 0, 0]);
-pub const VU_256: u256 = u256([661, 0, 0, 0]);
-// Elements of the MDS matrix used; this is the matrix [[2,1,1],[1,2,1],[1,1,2]]
-// converted to BLS Scalar form (i.e. in Montgomery form)
+/// This is the largest prime that is smaller than all of the s_i values, as a
+/// raw BLS scalar
+pub const V_BLS: Scalar = Scalar([659, 0, 0, 0]);
+/// This is the largest prime that is smaller than all of the s_i values, as a
+/// u256 item
+pub const VU_256: u256 = u256([659, 0, 0, 0]);
+
+/// This is the montgomery form
+/// of the BlsScalar Two, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_TWO: Scalar = Scalar([
+    17179869180,
+    12756850513266774020,
+    3681868479150465002,
+    3479420709561305823,
+]);
+
+/// This is the montgomery form
+/// of the BlsScalar Three, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_THREE: Scalar = Scalar([
+    25769803770,
+    688531696190609414,
+    14746174755580473312,
+    5219131064341958734,
+]);
+
+/// This is the montgomery form
+/// of the BlsScalar Four, which is used
+/// to reduce the expense of multiplying
+/// by the Montgomery radix.
+pub const MONTGOMERY_FOUR: Scalar = Scalar([
+    34359738360,
+    7066956952823996424,
+    7363736958300930005,
+    6958841419122611646,
+]);
+
+/// Elements of the MDS matrix used; this is the matrix
+/// [[2,1,1],[1,2,1],[1,1,2]] converted to BLS Scalar form (i.e. in Montgomery
+/// form)
 pub const MATRIX_BLS: [[Scalar; 3]; 3] = [
     [
         Scalar([
@@ -77,7 +116,7 @@ pub const MATRIX_BLS: [[Scalar; 3]; 3] = [
     ],
 ];
 
-// Constant round vector that is included in concrete (in Montgomery form)
+/// Constant round vector that is included in concrete (in Montgomery form)
 pub const CONSTANTS_BLS: [[Scalar; 3]; 6] = [
     [
         Scalar([
@@ -201,7 +240,8 @@ pub const CONSTANTS_BLS: [[Scalar; 3]; 6] = [
     ],
 ];
 
-// decomposition of -1 = [v_n, v_{n-1} ..., v_1], i.e. the representation of q-1
+/// Decomposition of -1 = [v_n, v_{n-1} ..., v_1], i.e. the representation of
+/// q-1
 pub const BLS_SCALAR_REAL: [u256; 27] = [
     u256([660, 0, 0, 0]),
     u256([660, 0, 0, 0]),
@@ -232,7 +272,7 @@ pub const BLS_SCALAR_REAL: [u256; 27] = [
     u256([678, 0, 0, 0]),
 ];
 
-// Decomposition = [s_n, s_{n-1} ..., s_1]
+/// Decomposition group sizes = [s_n, s_{n-1} ..., s_1]
 pub const DECOMPOSITION_S_I: [Scalar; 27] = [
     Scalar([693, 0, 0, 0]),
     Scalar([696, 0, 0, 0]),
@@ -429,8 +469,8 @@ pub const S_I_DECOMPOSITION_MONTGOMERY: [Scalar; 27] = [
     ]),
 ];
 
-// decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
-// s_1^{-1}]
+/// Decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
+/// s_1^{-1}]
 pub const INVERSES_S_I: [Scalar; 27] = [
     Scalar([
         10221572469640980478,
@@ -596,6 +636,7 @@ pub const INVERSES_S_I: [Scalar; 27] = [
     ]),
 ];
 
+/// Sbox used in bar function, where the row index indicates what moves where
 pub const SBOX_U256: [u256; 659] = [
     u256([15, 0, 0, 0]),
     u256([187, 0, 0, 0]),
@@ -1258,39 +1299,6 @@ pub const SBOX_U256: [u256; 659] = [
     u256([346, 0, 0, 0]),
 ];
 
-/// This is the montgomery form
-/// of the BlsScalar Two, which is used
-/// to reduce the expense of multiplying
-/// by the Montgomery radix.
-pub const MONTGOMERY_TWO: Scalar = Scalar([
-    17179869180,
-    12756850513266774020,
-    3681868479150465002,
-    3479420709561305823,
-]);
-
-/// This is the montgomery form
-/// of the BlsScalar Three, which is used
-/// to reduce the expense of multiplying
-/// by the Montgomery radix.
-pub const MONTGOMERY_THREE: Scalar = Scalar([
-    25769803770,
-    688531696190609414,
-    14746174755580473312,
-    5219131064341958734,
-]);
-
-/// This is the montgomery form
-/// of the BlsScalar Four, which is used
-/// to reduce the expense of multiplying
-/// by the Montgomery radix.
-pub const MONTGOMERY_FOUR: Scalar = Scalar([
-    34359738360,
-    7066956952823996424,
-    7363736958300930005,
-    6958841419122611646,
-]);
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1304,14 +1312,7 @@ mod tests {
     }
 
     #[test]
-    fn print_new_sbox() {
-        (0..659).for_each(|k| {
-            println!("[BlsScalar([{:?}, 0, 0, 0]), BlsScalar([{:?}, 0, 0, 0]), BlsScalar({:?})],", k, k, SBOX_U256[k].0);
-        })
-    }
-
-    #[test]
-    fn s_box_in_BLS() {
+    fn s_box_in_bls() {
         (0..659).for_each(|k| {
             println!("[BlsScalar({:?})],", SBOX_U256[k].0);
         })

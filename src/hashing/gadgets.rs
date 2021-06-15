@@ -6,13 +6,7 @@
 
 //! This file contains the circuit implementation of the
 //! zelbet hash function
-
-<<<<<<< HEAD
 use crate::constants::DECOMPOSITION_S_I;
-=======
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, MONTGOMERY_TWO};
-use bigint::U256 as u256;
->>>>>>> acc8b02e8ff9a706e20e0d23ff8e1a2461ec998d
 use dusk_plonk::constraint_system::{StandardComposer, Variable};
 use dusk_plonk::prelude::*;
 
@@ -23,6 +17,7 @@ pub fn brick_gadget(
     state: &[Variable; 3],
     two: Variable,
 ) -> [Variable; 3] {
+    // Finding y_1
     let x_squared = composer.mul(
         BlsScalar::one(),
         state[0],
@@ -37,7 +32,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let var_one = composer.mul(
+    let y_1 = composer.mul(
         BlsScalar::one(),
         x_fourth,
         state[0],
@@ -45,6 +40,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
     );
 
+    // Finding y_2
     let tuple = composer.big_add(
         (BlsScalar::one(), x_squared),
         (BlsScalar::one(), state[0]),
@@ -52,7 +48,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let var_two = composer.mul(
+    let y_2 = composer.mul(
         BlsScalar::one(),
         state[1],
         tuple,
@@ -60,6 +56,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
     );
 
+    // Finding y_3
     // x3 ·(x2^2 +α2 ·x2 +β2))
     let y_squared_plus_4 = composer.mul(
         BlsScalar::one(),
@@ -75,7 +72,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let var_three = composer.mul(
+    let y_3 = composer.mul(
         BlsScalar::one(),
         tuple_one,
         state[2],
@@ -83,7 +80,7 @@ pub fn brick_gadget(
         BlsScalar::zero(),
     );
 
-    [var_one, var_two, var_three]
+    [y_1, y_2, y_3]
 }
 
 /// In-circuit concrete function as part of the Zelbet hashing
@@ -93,7 +90,7 @@ pub fn concrete_gadget(
     state: &[Variable; 3],
     constants: &[Variable; 3],
 ) -> [Variable; 3] {
-    // out0 = 2*u[0] + u[1] + u[2] + c[0];
+    // y_1 = 2*u[0] + u[1] + u[2] + c[0];
     let a0 = composer.big_add(
         (BlsScalar::from(2), state[0]),
         (BlsScalar::one(), state[1]),
@@ -101,14 +98,14 @@ pub fn concrete_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let out0 = composer.add(
+    let y_1 = composer.add(
         (BlsScalar::one(), a0),
         (BlsScalar::one(), constants[0]),
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
 
-    // out1 = u[0] + 2*u[1] + u[2] + c[1];
+    // y_2 = u[0] + 2*u[1] + u[2] + c[1];
     let a1 = composer.big_add(
         (BlsScalar::one(), state[0]),
         (BlsScalar::from(2), state[1]),
@@ -116,14 +113,14 @@ pub fn concrete_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let out1 = composer.add(
+    let y_2 = composer.add(
         (BlsScalar::one(), a1),
         (BlsScalar::one(), constants[1]),
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
 
-    // out2 = u[0] + u[1] + 2*u[2] + c[2];
+    // y_3 = u[0] + u[1] + 2*u[2] + c[2];
     let a2 = composer.big_add(
         (BlsScalar::one(), state[0]),
         (BlsScalar::one(), state[1]),
@@ -131,18 +128,18 @@ pub fn concrete_gadget(
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
-    let out2 = composer.add(
+    let y_3 = composer.add(
         (BlsScalar::one(), a2),
         (BlsScalar::one(), constants[2]),
         BlsScalar::zero(),
         BlsScalar::zero(),
     );
 
-    [out0, out1, out2]
+    [y_1, y_2, y_3]
 }
 
-<<<<<<< HEAD
-/// Bar function
+/// In circuit bar function, making use of decomposition gadget
+/// and s-box functions that are defined in PLONK repo
 pub fn bar_gadget(
     composer: &mut StandardComposer,
     input: Variable,
@@ -150,13 +147,17 @@ pub fn bar_gadget(
     one: Variable,
     two: Variable,
 ) -> Variable {
+    // Decomposition
     let mut tuple = composer.decomposition_gadget(input, s_i_decomposition);
 
     // Initialise the constraints
     let mut c_i = [input; 27];
     let mut conditional = false;
     let mut z_i = [input; 27];
-    (0..27).for_each(|k| {
+    // Calculate s-box permutation, and constraint values. It is important that
+    // tuple[26] is done first as this is x_1, and c_1 should be calculated
+    // first, not c_27
+    (0..27).rev().for_each(|k| {
         let result = composer.s_box_and_constraints(
             tuple[k],
             (27 - k) as u64,
@@ -206,6 +207,9 @@ pub fn bar_gadget(
         BlsScalar::zero(),
     );
 
+    // Initialise accumulator - this is needed to check constraint number 17
+    // from the reinforced concrete paper, that the decomposition's cmposition
+    // does equal the input, x
     let mut accumulator_var = composer.add_input(BlsScalar::zero());
     accumulator_var = composer.big_add(
         (BlsScalar::one(), accumulator_var),
@@ -229,52 +233,17 @@ pub fn bar_gadget(
 
     accumulator_var
 }
-=======
-// /// Bar function
-// pub fn bar_gadget(composer: &mut StandardComposer, input: Variable) -> Variable {
-//     let mut tuple = composer.decomposition_gadget(input, DECOMPOSITION_S_I, INVERSES_S_I);
-
-//     // let s_box_table = PlookupTable4Arity::s_box_table();
-//     // composer.lookup_table = s_box_table;
-//     (0..27).for_each(|k| {
-//         tuple[k] = composer.s_box(tuple[k]);
-//     });
-
-//     let mut accumulator_var = composer.add_input(BlsScalar::zero());
-//     (1..27).rev().for_each(|k| {
-//         if k == 26 {
-//             accumulator_var = composer.big_add(
-//                 (BlsScalar::one(), accumulator_var),
-//                 (BlsScalar::one(), tuple[k]),
-//                 None,
-//                 BlsScalar::zero(),
-//                 None,
-//             );
-//         }
-//         let s_i_var = composer.add_input(BlsScalar::from_raw(DECOMPOSITION_S_I[k - 1].0));
-//         accumulator_var = composer.big_mul(
-//             BlsScalar::one(),
-//             accumulator_var,
-//             s_i_var,
-//             Some((BlsScalar::one(), tuple[k - 1])),
-//             BlsScalar::zero(),
-//             None,
-//         );
-//     });
-
-//     accumulator_var
-// }
->>>>>>> acc8b02e8ff9a706e20e0d23ff8e1a2461ec998d
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constants::MATRIX_BLS, hashing::zelbet::brick};
+    use crate::constants::S_I_DECOMPOSITION_MONTGOMERY;
+    use crate::hashing::zelbet::brick;
     use crate::{gadget_tester, hashing::zelbet::concrete};
     use dusk_plonk::plookup::PlookupTable4Arity;
 
     #[test]
-    fn test_bar() {
+    fn test_bar_gadget() {
         let res = gadget_tester(
             |composer| {
                 let hash_table = PlookupTable4Arity::create_hash_table();
@@ -284,9 +253,9 @@ mod tests {
                 let mut s_i_decomposition = [one; 27];
                 (0..27).for_each(|k| {
                     s_i_decomposition[k] =
-                        composer.add_input(DECOMPOSITION_S_I[k]);
+                        composer.add_input(S_I_DECOMPOSITION_MONTGOMERY[k]);
                 });
-                // Check that the output is what we expected (in Montgomery)
+                // Check bar funciton on input of 1
                 let output =
                     bar_gadget(composer, one, s_i_decomposition, one, two);
                 let expected = BlsScalar([
@@ -295,18 +264,39 @@ mod tests {
                     12554333934768435622,
                     1625679107374292725,
                 ]);
+                // Check that the output is what we expected (in Montgomery)
                 composer.constrain_to_constant(
                     output,
                     expected,
                     BlsScalar::zero(),
                 );
-                let one_eight_seven = composer.add_input(BlsScalar::from(187));
-                let zero = composer.add_input(BlsScalar::from(0));
+
+                // Check bar function on input of -5
+                let minus_five = composer.add_input(-BlsScalar::from(5));
+                let output2 = bar_gadget(
+                    composer,
+                    minus_five,
+                    s_i_decomposition,
+                    one,
+                    two,
+                );
+                composer.constrain_to_constant(
+                    output2,
+                    BlsScalar([
+                        18446742991377793276,
+                        7975156907413507843,
+                        7849958771744875838,
+                        2157424182152352530,
+                    ]),
+                    BlsScalar::zero(),
+                );
 
                 // Plookup is designed to not pass if the number of plookup
                 // checks is much smaller than the size of the lookup table, so
                 // these extra checks are to increase the number of plookup
                 // gates
+                let one_eight_seven = composer.add_input(BlsScalar::from(187));
+                let zero = composer.add_input(BlsScalar::from(0));
                 (0..550).for_each(|_| {
                     composer.plookup_gate(
                         one,
@@ -388,7 +378,6 @@ mod tests {
                     concrete_gadget(composer, &[one, two, three], &[two; 3]);
                 let output_1 = concrete(
                     [BlsScalar::one(), BlsScalar::from(2), BlsScalar::from(3)],
-                    MATRIX_BLS,
                     [BlsScalar::from(2); 3],
                 );
 
@@ -419,26 +408,4 @@ mod tests {
         );
         assert!(res.is_ok());
     }
-
-    // #[test]
-    // fn test_bar_gadget() {
-    //     let res = gadget_tester(
-    //         |composer| {
-    //             let one = composer.add_input(BlsScalar::one());
-    //             // Check that the output is what we expected (in Montgomery)
-    //             let output = bar_gadget(composer, one);
-    //             let expected = BlsScalar([
-    //                 2921300856332839541,
-    //                 8943181998193365483,
-    //                 12554333934768435622,
-    //                 1625679107374292725,
-    //             ]);
-    //             composer.constrain_to_constant(output, expected, BlsScalar::zero());
-    //             println!("circuit is {:?}", composer.circuit_size());
-    //         },
-    //         800,
-    //     );
-    //     assert!(res.is_ok());
-    // }
-
 }
