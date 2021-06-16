@@ -68,7 +68,9 @@ pub fn bar(state: &mut [Scalar; 3]) {
 
             // 2. S-box
             nibbles[k] = small_s_box(remainder);
+            print!("{}, ", nibbles[k]);
         });
+        println!(" ");
 
         // 3. Composition
         *scalar = compute_whole_representation(nibbles);
@@ -86,13 +88,69 @@ mod tests {
         breakdown[0] = u256([187, 0, 0, 0]);
         let composed = compute_whole_representation(breakdown);
         assert_eq!(input[0], composed);
+
+        // Check whether -5 is dealt with correctly
+        let mut input2 = [-Scalar::from(5), -Scalar::from(3), -Scalar::from(1)];
+        bar(&mut input2);
+
+        assert_eq!(
+            input2[0],
+            Scalar([
+                18446742991377793276,
+                7975156907413507843,
+                7849958771744875838,
+                2157424182152352530
+            ])
+        );
+        assert_eq!(
+            input2[1],
+            Scalar([
+                18446741084412314296,
+                12364043610437066055,
+                4990927207653396091,
+                3323350968747990091
+            ])
+        );
+        assert_eq!(
+            input2[2],
+            Scalar([
+                18446744060824649731,
+                18102478225614246908,
+                11073656695919314959,
+                6613806504683796440
+            ])
+        );
     }
 
     #[test]
-    fn test_zelbet_out_of_circuit() {
-        let minus_five = -Scalar::from(5);
-        let mut input = [minus_five; 3];
-        bar(&mut input);
-        println!("output {:?}", input[0].0);
+    fn test_compute_whole() {
+        // Check if -5 is composed correctly
+        let expected_breakdown = [
+            656, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672, 666, 680,
+            662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687, 683, 674,
+            678, 658, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672, 666,
+            680, 662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687, 683,
+            674, 678, 658, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672,
+            666, 680, 662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687,
+            683, 674, 678,
+        ];
+        let mut expected = [u256::zero(); 27];
+        (0..27).for_each(|k| {
+            expected[k] = u256::from(expected_breakdown[k]);
+        });
+        let composition = compute_whole_representation(expected);
+        assert_eq!(composition, -Scalar::from(5));
+    }
+
+    #[test]
+    fn test_s_box() {
+        let six_five_eight = u256::from(658);
+        let six_five_nine = u256::from(659);
+        let thirty = u256::from(30);
+        let six_seventy = u256::from(670);
+        assert_eq!(small_s_box(six_five_eight), u256::from(346));
+        assert_eq!(small_s_box(six_five_nine), u256::from(659));
+        assert_eq!(small_s_box(thirty), u256::from(179));
+        assert_eq!(small_s_box(six_seventy), u256::from(670));
     }
 }
