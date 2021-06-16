@@ -469,8 +469,8 @@ pub const S_I_DECOMPOSITION_MONTGOMERY: [Scalar; 27] = [
     ]),
 ];
 
-/// Decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
-/// s_1^{-1}]
+// decomposition_inverses (are in Montgomery form) = [s_n^{-1}, ...,
+// s_1^{-1}]
 pub const INVERSES_S_I: [Scalar; 27] = [
     Scalar([
         10221572469640980478,
@@ -1309,12 +1309,5 @@ mod tests {
             let product = Scalar(DECOMPOSITION_S_I[k].0) * (INVERSES_S_I[k]);
             assert_eq!(Scalar::from_raw(product.0), Scalar::one());
         }
-    }
-
-    #[test]
-    fn s_box_in_bls() {
-        (0..659).for_each(|k| {
-            println!("[BlsScalar({:?})],", SBOX_U256[k].0);
-        })
     }
 }
