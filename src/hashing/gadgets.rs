@@ -148,7 +148,8 @@ pub fn bar_gadget(
     two: Variable,
 ) -> Variable {
     // Decomposition
-    let mut tuple = composer.decomposition_gadget(input, s_i_decomposition);
+    let (mut tuple_mont, tuple_reduced) =
+        composer.decomposition_gadget(input, s_i_decomposition);
 
     // Initialise the constraints
     let mut c_i = [input; 27];
@@ -159,13 +160,14 @@ pub fn bar_gadget(
     // first, not c_27
     (0..27).rev().for_each(|k| {
         let result = composer.s_box_and_constraints(
-            tuple[k],
+            tuple_mont[k],
+            tuple_reduced[k],
             (27 - k) as u64,
             conditional,
             one,
             two,
         );
-        tuple[k] = result.0;
+        tuple_mont[k] = result.0;
         c_i[k] = result.1;
         conditional = result.2;
         z_i[k] = result.3;
@@ -213,7 +215,7 @@ pub fn bar_gadget(
     let mut accumulator_var = composer.add_input(BlsScalar::zero());
     accumulator_var = composer.big_add(
         (BlsScalar::one(), accumulator_var),
-        (BlsScalar::one(), tuple[26]),
+        (BlsScalar::one(), tuple_mont[26]),
         None,
         BlsScalar::zero(),
         BlsScalar::zero(),
@@ -225,7 +227,7 @@ pub fn bar_gadget(
             BlsScalar::one(),
             accumulator_var,
             s_i_var,
-            Some((BlsScalar::one(), tuple[k - 1])),
+            Some((BlsScalar::one(), tuple_mont[k - 1])),
             BlsScalar::zero(),
             BlsScalar::zero(),
         );
