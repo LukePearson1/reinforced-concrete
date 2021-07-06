@@ -51,7 +51,8 @@ pub fn zelbet_gadget(
     item = concrete_gadget(composer, &item, &round3_constants);
     // Apply bar function to each entry
     (0..3).for_each(|k| {
-        item[k] = bar_gadget(composer, item[k], s_i_decomposition, zero, one, two);
+        item[k] =
+            bar_gadget(composer, item[k], s_i_decomposition, zero, one, two);
     });
 
     // Round 4

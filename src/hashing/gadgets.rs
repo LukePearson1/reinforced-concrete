@@ -317,8 +317,14 @@ mod tests {
                         composer.add_input(S_I_DECOMPOSITION_MONTGOMERY[k]);
                 });
                 // Check bar funciton on input of 1
-                let output =
-                    bar_gadget(composer, one, s_i_decomposition, zero, one, two);
+                let output = bar_gadget(
+                    composer,
+                    one,
+                    s_i_decomposition,
+                    zero,
+                    one,
+                    two,
+                );
                 let expected = BlsScalar([
                     2921300856332839541,
                     8943181998193365483,
@@ -478,41 +484,50 @@ mod tests {
                 let hash_table = PlookupTable4Arity::create_hash_table();
                 composer.append_lookup_table(&hash_table);
                 let seven_hundred = composer.add_input(BlsScalar::from(700));
+                let zero = composer.add_input(BlsScalar::zero());
                 let one = composer.add_input(BlsScalar::one());
                 let two = composer.add_input(BlsScalar::from(2));
                 let prime = composer.add_input(BlsScalar::from(659));
                 let counter: u64 = 1;
                 let counter2: u64 = 2;
                 let conditional = true;
-                let output_700 = composer.s_box_and_constraints(
+                let output_700 = s_box_and_constraints(
+                    composer,
                     seven_hundred,
                     u256::from(700),
                     counter2,
                     conditional,
+                    zero,
                     one,
                     two,
                 );
-                let output_one = composer.s_box_and_constraints(
+                let output_one = s_box_and_constraints(
+                    composer,
                     one,
                     u256::from(1),
                     counter,
                     conditional,
+                    zero,
                     one,
                     two,
                 );
-                let output_prime = composer.s_box_and_constraints(
+                let output_prime = s_box_and_constraints(
+                    composer,
                     prime,
                     u256::from(659),
                     counter2,
                     conditional,
+                    zero,
                     one,
                     two,
                 );
-                let output_prime_false = composer.s_box_and_constraints(
+                let output_prime_false = s_box_and_constraints(
+                    composer,
                     prime,
                     u256::from(659),
                     counter,
                     false,
+                    zero,
                     one,
                     two,
                 );
@@ -535,14 +550,36 @@ mod tests {
                 );
 
                 (0..1100).for_each(|k| {
-                    composer.plookup_gate(prime, one, prime, Some(one), BlsScalar::zero());
+                    composer.plookup_gate(
+                        prime,
+                        one,
+                        prime,
+                        Some(one),
+                        BlsScalar::zero(),
+                    );
                 });
 
                 // Check that the c_i are output as expected
-                composer.constrain_to_constant(output_700.1, BlsScalar::from(2), BlsScalar::zero());
-                composer.constrain_to_constant(output_one.1, BlsScalar::one(), BlsScalar::zero());
-                composer.constrain_to_constant(output_prime.1, BlsScalar::one(), BlsScalar::zero());
-                composer.constrain_to_constant(output_prime_false.1, BlsScalar::one(), BlsScalar::zero());
+                composer.constrain_to_constant(
+                    output_700.1,
+                    BlsScalar::from(2),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_one.1,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_prime.1,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_prime_false.1,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
 
                 // Check that the counter is output correctly
                 assert!(output_700.2);
@@ -551,10 +588,26 @@ mod tests {
                 assert!(!output_prime_false.2);
 
                 // Check that z_i is output correctly
-                composer.constrain_to_constant(output_700.3, BlsScalar::one(), BlsScalar::zero());
-                composer.constrain_to_constant(output_one.3, BlsScalar::zero(), BlsScalar::zero());
-                composer.constrain_to_constant(output_prime.3, BlsScalar::one(), BlsScalar::zero());
-                composer.constrain_to_constant(output_prime_false.3, BlsScalar::one(), BlsScalar::zero());
+                composer.constrain_to_constant(
+                    output_700.3,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_one.3,
+                    BlsScalar::zero(),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_prime.3,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
+                composer.constrain_to_constant(
+                    output_prime_false.3,
+                    BlsScalar::one(),
+                    BlsScalar::zero(),
+                );
             },
             4000,
         );
@@ -568,15 +621,19 @@ mod tests {
                 let hash_table = PlookupTable4Arity::create_hash_table();
                 composer.append_lookup_table(&hash_table);
                 let one_hundred = composer.add_input(BlsScalar::from(100));
+                let zero = composer.add_input(BlsScalar::zero());
+                let one = composer.add_input(BlsScalar::one());
                 let two = composer.add_input(BlsScalar::from(2));
                 let counter: u64 = 1;
                 let conditional = true;
-                let output = composer.s_box_and_constraints(
+                let output = s_box_and_constraints(
+                    composer,
                     one_hundred,
                     u256::from(100),
                     counter,
                     conditional,
-                    one_hundred,
+                    zero,
+                    one,
                     two,
                 );
                 composer.constrain_to_constant(
