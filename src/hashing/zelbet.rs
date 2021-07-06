@@ -26,54 +26,50 @@ pub fn zelbet_gadget(
     composer: &mut StandardComposer,
     state: &[Variable; 3],
     s_i_decomposition: [Variable; 27],
+    constants_for_rounds: [Variable; 18],
+    zero: Variable,
     one: Variable,
     two: Variable,
 ) -> [Variable; 3] {
     let mut constants_vector = [one; 3];
 
-    // Constants vector used for each concrete round must be added as variables
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[0][k]);
-    });
-    let mut item = concrete_gadget(composer, state, &constants_vector);
+    // Round 1
+    let mut round1_constants = [one; 3];
+    round1_constants.copy_from_slice(&constants_for_rounds[0..3]);
+    let mut item = concrete_gadget(composer, state, &round1_constants);
     item = brick_gadget(composer, &item, two);
 
     // Round 2
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[1][k]);
-    });
-    item = concrete_gadget(composer, &item, &constants_vector);
+    let mut round2_constants = [one; 3];
+    round2_constants.copy_from_slice(&constants_for_rounds[3..6]);
+    item = concrete_gadget(composer, &item, &round2_constants);
     item = brick_gadget(composer, &item, two);
 
-    // Concrete-bar round
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[2][k]);
-    });
-    item = concrete_gadget(composer, &item, &constants_vector);
+    // Round 3
+    let mut round3_constants = [one; 3];
+    round3_constants.copy_from_slice(&constants_for_rounds[6..9]);
+    item = concrete_gadget(composer, &item, &round3_constants);
     // Apply bar function to each entry
     (0..3).for_each(|k| {
-        item[k] = bar_gadget(composer, item[k], s_i_decomposition, one, two);
+        item[k] = bar_gadget(composer, item[k], s_i_decomposition, zero, one, two);
     });
 
     // Round 4
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[3][k]);
-    });
-    item = concrete_gadget(composer, &item, &constants_vector);
+    let mut round4_constants = [one; 3];
+    round4_constants.copy_from_slice(&constants_for_rounds[9..12]);
+    item = concrete_gadget(composer, &item, &round4_constants);
     item = brick_gadget(composer, &item, two);
 
     // Round 5
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[4][k]);
-    });
-    item = concrete_gadget(composer, &item, &constants_vector);
+    let mut round5_constants = [one; 3];
+    round5_constants.copy_from_slice(&constants_for_rounds[12..15]);
+    item = concrete_gadget(composer, &item, &round5_constants);
     item = brick_gadget(composer, &item, two);
 
     // Final concrete
-    (0..3).for_each(|k| {
-        constants_vector[k] = composer.add_input(CONSTANTS_BLS[5][k]);
-    });
-    item = concrete_gadget(composer, &item, &constants_vector);
+    let mut round6_constants = [one; 3];
+    round6_constants.copy_from_slice(&constants_for_rounds[15..18]);
+    item = concrete_gadget(composer, &item, &round6_constants);
 
     item
 }
@@ -108,6 +104,7 @@ mod tests {
             |composer| {
                 let hash_table = PlookupTable4Arity::create_hash_table();
                 composer.append_lookup_table(&hash_table);
+                let zero = composer.add_input(BlsScalar::zero());
                 let one = composer.add_input(BlsScalar::one());
                 let two = composer.add_input(BlsScalar::from(2));
                 let mut s_i_decomposition = [one; 27];
@@ -117,10 +114,19 @@ mod tests {
                             S_I_DECOMPOSITION_MONTGOMERY[k],
                         );
                 });
+                let mut constants_for_rounds = [one; 18];
+                (0..6).for_each(|k| {
+                    (0..3).for_each(|j| {
+                        constants_for_rounds[3 * k + j] =
+                            composer.add_input(CONSTANTS_BLS[k][j]);
+                    })
+                });
                 let _result = zelbet_gadget(
                     composer,
                     &[one; 3],
                     s_i_decomposition,
+                    constants_for_rounds,
+                    zero,
                     one,
                     two,
                 );

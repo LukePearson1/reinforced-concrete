@@ -68,9 +68,7 @@ pub fn bar(state: &mut [Scalar; 3]) {
 
             // 2. S-box
             nibbles[k] = small_s_box(remainder);
-            print!("{}, ", nibbles[k]);
         });
-        println!(" ");
 
         // 3. Composition
         *scalar = compute_whole_representation(nibbles);

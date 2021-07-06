@@ -7,6 +7,7 @@
 use crate::constants::{MONTGOMERY_TWO, S_I_DECOMPOSITION_MONTGOMERY};
 
 pub use super::zelbet::*;
+use crate::constants::CONSTANTS_BLS;
 use dusk_bytes::*;
 use dusk_plonk::{
     constraint_system::{StandardComposer, Variable},
@@ -23,8 +24,18 @@ pub fn sponge_zelbet_gadget(
 ) -> Vec<Variable> {
     // These constants are needed in reinforced concrete, so they are recorded
     // as variables here for efficiency
+    let zero = composer.add_witness_to_circuit_description(BlsScalar::zero());
     let one = composer.add_witness_to_circuit_description(BlsScalar::one());
     let two = composer.add_witness_to_circuit_description(MONTGOMERY_TWO);
+    // We don't want to add the constants for the concrete gadget as inputs for
+    // each call of zelbet, so we add them once in the sponge
+    let mut constants_for_rounds = [one; 18];
+    (0..6).for_each(|k| {
+        (0..3).for_each(|j| {
+            constants_for_rounds[3 * k + j] =
+                composer.add_input(CONSTANTS_BLS[k][j]);
+        })
+    });
 
     // Initialise the s_i values as variables
     let mut s_i_decomposition = [input[0]; 27];
@@ -48,7 +59,15 @@ pub fn sponge_zelbet_gadget(
     // Fixed starting constant values as defined in reinforced concrete paper
     let mut state = [input[0], input[1], one];
 
-    state = zelbet_gadget(composer, &state, s_i_decomposition, one, two);
+    state = zelbet_gadget(
+        composer,
+        &state,
+        s_i_decomposition,
+        constants_for_rounds,
+        zero,
+        one,
+        two,
+    );
 
     // Repeat cycle of adding the two relevant scalars together and then hashing
     (1..length_in / 2).for_each(|k| {
@@ -68,7 +87,15 @@ pub fn sponge_zelbet_gadget(
             BlsScalar::zero(),
         );
         // Conduct the next round of hashing
-        state = zelbet_gadget(composer, &state, s_i_decomposition, one, two);
+        state = zelbet_gadget(
+            composer,
+            &state,
+            s_i_decomposition,
+            constants_for_rounds,
+            zero,
+            one,
+            two,
+        );
     });
 
     // Initialise output vector
@@ -79,19 +106,41 @@ pub fn sponge_zelbet_gadget(
 
     if length_out % 2 == 0 {
         (1..length_out / 2).for_each(|k| {
-            state =
-                zelbet_gadget(composer, &state, s_i_decomposition, one, two);
+            state = zelbet_gadget(
+                composer,
+                &state,
+                s_i_decomposition,
+                constants_for_rounds,
+                zero,
+                one,
+                two,
+            );
             output[2 * k] = state[0];
             output[2 * k + 1] = state[1];
         })
     } else if length_out % 2 == 1 && length_out > 1 {
         (1..(length_out - 1) / 2).for_each(|k| {
-            state =
-                zelbet_gadget(composer, &state, s_i_decomposition, one, two);
+            state = zelbet_gadget(
+                composer,
+                &state,
+                s_i_decomposition,
+                constants_for_rounds,
+                zero,
+                one,
+                two,
+            );
             output[2 * k] = state[0];
             output[2 * k + 1] = state[1];
         });
-        state = zelbet_gadget(composer, &state, s_i_decomposition, one, two);
+        state = zelbet_gadget(
+            composer,
+            &state,
+            s_i_decomposition,
+            constants_for_rounds,
+            zero,
+            one,
+            two,
+        );
         output[length_out - 1] = state[0];
     }
 
