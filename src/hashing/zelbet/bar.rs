@@ -4,16 +4,14 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{
-    BLS_SCALAR_REAL, DECOMPOSITION_S_I, INVERSES_S_I, SBOX_BLS, VU_256,
-};
+use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_U256, VU_256};
 use bigint::U256 as u256;
-use dusk_bls12_381::BlsScalar as Scalar;
+use dusk_plonk::prelude::BlsScalar as Scalar;
 
 const DECOMPOSITION_LEN: usize = 27;
 
-// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
-// element
+/// Convert representation from tuple in (Z_{s_n} x ... x Z_{s_1}) to single
+/// scalar element in Montgomery form (out of circuit)
 fn compute_whole_representation(
     decomposition: [u256; DECOMPOSITION_LEN],
 ) -> Scalar {
@@ -22,50 +20,54 @@ fn compute_whole_representation(
         (0..DECOMPOSITION_LEN)
             .rev()
             .fold(u256::zero(), |single, k| match k > 0 {
-                true => (single + decomposition[k]) * DECOMPOSITION_S_I[k - 1],
+                true => {
+                    (single + decomposition[k])
+                        * u256(DECOMPOSITION_S_I[k - 1].0)
+                }
                 false => single + decomposition[k],
             })
             .0,
     )
 }
 
-// S-box used in bar function
+/// S-box used in bar function (out of circuit)
 fn small_s_box(x: u256) -> u256 {
     match x < VU_256 {
-        true => SBOX_BLS[x.as_u32() as usize],
+        true => SBOX_U256[x.as_u32() as usize],
         false => x,
     }
 }
 
-// Lookup-table-based Sbox
+/// Bar function (out of circuit)
 pub fn bar(state: &mut [Scalar; 3]) {
     let mut nibbles = [u256::zero(); 27];
 
     for scalar in state.iter_mut() {
+        // println!("input is {:?}", scalar.reduce().0);
         // 1. Decomposition
         // Get state value that we are decomposing in non-Montgomery form (comes
         // in Montgomery form by default due to BLS library; but the
-        // modular operations won't work as intended if left like this)
+        // modular operations can't be done if left like this)
         let mut intermediate = u256(scalar.reduce().0);
-        let mut value = u256::zero();
+        let mut remainder = u256::zero();
 
         (0..27).for_each(|k| {
-            value = intermediate % DECOMPOSITION_S_I[k];
-
             // Reduce intermediate representation
             match k < 26 {
                 true => {
-                    // Convert to BLS scalar form to make use of fast modular
-                    // multiplication (rather than dividing)
+                    remainder = intermediate % u256(DECOMPOSITION_S_I[k].0);
+                    // Ensure s_i inverses are in Montgomery form, because BLS
+                    // scalar multiplication removes a
+                    // factor of 2^512
                     let intermediate_scalar: Scalar =
-                        Scalar((intermediate - value).0) * INVERSES_S_I[k];
+                        Scalar((intermediate - remainder).0) * INVERSES_S_I[k];
                     intermediate = u256(intermediate_scalar.0);
                 }
-                false => value = intermediate,
+                false => remainder = intermediate,
             };
 
             // 2. S-box
-            nibbles[k] = small_s_box(value);
+            nibbles[k] = small_s_box(remainder);
         });
 
         // 3. Composition
@@ -74,6 +76,8 @@ pub fn bar(state: &mut [Scalar; 3]) {
 }
 
 mod tests {
+    use crate::constants::BLS_SCALAR_REAL;
+
     use super::*;
 
     #[test]
@@ -84,6 +88,70 @@ mod tests {
         breakdown[0] = u256([187, 0, 0, 0]);
         let composed = compute_whole_representation(breakdown);
         assert_eq!(input[0], composed);
+
+        // Check whether -5 is dealt with correctly
+        let mut input2 = [-Scalar::from(5), -Scalar::from(3), -Scalar::from(1)];
+        bar(&mut input2);
+
+        assert_eq!(
+            input2[0],
+            Scalar([
+                18446742991377793276,
+                7975156907413507843,
+                7849958771744875838,
+                2157424182152352530
+            ])
+        );
+        assert_eq!(
+            input2[1],
+            Scalar([
+                18446741084412314296,
+                12364043610437066055,
+                4990927207653396091,
+                3323350968747990091
+            ])
+        );
+        assert_eq!(
+            input2[2],
+            Scalar([
+                18446744060824649731,
+                18102478225614246908,
+                11073656695919314959,
+                6613806504683796440
+            ])
+        );
+    }
+
+    #[test]
+    fn test_compute_whole() {
+        // Check if -5 is composed correctly
+        let expected_breakdown = [
+            656, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672, 666, 680,
+            662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687, 683, 674,
+            678, 658, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672, 666,
+            680, 662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687, 683,
+            674, 678, 658, 660, 673, 663, 674, 682, 687, 683, 669, 684, 672,
+            666, 680, 662, 686, 668, 661, 678, 692, 686, 689, 660, 690, 687,
+            683, 674, 678,
+        ];
+        let mut expected = [u256::zero(); 27];
+        (0..27).for_each(|k| {
+            expected[k] = u256::from(expected_breakdown[k]);
+        });
+        let composition = compute_whole_representation(expected);
+        assert_eq!(composition, -Scalar::from(5));
+    }
+
+    #[test]
+    fn test_s_box() {
+        let six_five_eight = u256::from(658);
+        let six_five_nine = u256::from(659);
+        let thirty = u256::from(30);
+        let six_seventy = u256::from(670);
+        assert_eq!(small_s_box(six_five_eight), u256::from(346));
+        assert_eq!(small_s_box(six_five_nine), u256::from(659));
+        assert_eq!(small_s_box(thirty), u256::from(179));
+        assert_eq!(small_s_box(six_seventy), u256::from(670));
     }
 
     #[test]
