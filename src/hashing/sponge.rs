@@ -147,10 +147,10 @@ pub fn sponge_zelbet_gadget(
     output
 }
 
-/// Sponge design for reinforced concrete, with arbitrary length input and
-/// output. Input length is read by the function, and output length is an input
-/// parameter.
-pub fn sponge_zelbet(
+/// Sponge design for out of circuit reinforced concrete, with arbitrary length
+/// input and output. Input length is read by the function, and output length is
+/// an input parameter.
+pub fn sponge_zelbet_out_of(
     input: Vec<BlsScalar>,
     length_out: usize,
 ) -> Vec<BlsScalar> {
@@ -214,109 +214,142 @@ mod tests {
     // checks whether the function runs or not. Should add results from an
     // independent python programme to compare against
     #[test]
-    fn test_sponge_gadget() {
+    fn test_sponge_out_of() {
         let res = gadget_tester(
             |composer| {
+                // This code will be used to rederive hard coded comparison once
+                // new conrete constants are added let in_out_of
+                // = vec![     BlsScalar::one(),
+                //     -BlsScalar::one(),
+                //     BlsScalar::from(23848872923),
+                //     BlsScalar::from(298375439085),
+                //     -BlsScalar::from(45),
+                // ];
+                // let out_result = sponge_zelbet_out_of(in_out_of, 5);
+                // (0..5).for_each(|k| {
+                //     println!("BlsScalar({:?}),", out_result[k].0);
+                // });
                 let hash_table = PlookupTable4Arity::create_hash_table();
                 composer.append_lookup_table(&hash_table);
                 let one = composer.add_input(BlsScalar::one());
-                let result = sponge_zelbet_gadget(composer, vec![one; 5], 5);
+                let minus_one = composer.add_input(-BlsScalar::one());
+                let in3 = composer.add_input(BlsScalar::from(23848872923));
+                let in4 = composer.add_input(BlsScalar::from(298375439085));
+                let in5 = composer.add_input(-BlsScalar::from(45));
+                let input = vec![one, minus_one, in3, in4, in5];
+                let result = sponge_zelbet_gadget(composer, input, 5);
 
                 // Compare output values to output from out of circuit version
                 // to help ensure consistency
                 composer.constrain_to_constant(
                     result[0],
                     BlsScalar([
-                        2948929853694419607,
-                        7328611936786299993,
-                        9919458621989105704,
-                        6130852493708878965,
+                        3484747639857072351,
+                        14140243809318516317,
+                        2677010683091861284,
+                        5989822391440071232,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result[1],
                     BlsScalar([
-                        17299957155812118625,
-                        17339778072127637790,
-                        11924609608675978405,
-                        2154428716724127434,
+                        15789496571931201497,
+                        5734252351908561059,
+                        14480882572942963540,
+                        7231953833215603379,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result[2],
                     BlsScalar([
-                        8071993871493204166,
-                        11515087050602589091,
-                        18009909627082794530,
-                        7421486182814624372,
+                        12475486859069551236,
+                        14704606153301152199,
+                        13339627484282619079,
+                        5821826886014145595,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result[3],
                     BlsScalar([
-                        16302036423968262150,
-                        41607565966230019,
-                        17585612505115477194,
-                        7596324467329926765,
+                        15842066148917484615,
+                        17957238005947866086,
+                        17629428195131741089,
+                        861367079814241638,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result[4],
                     BlsScalar([
-                        3279543462538777620,
-                        16893969979408605182,
-                        14803853461423869094,
-                        1742924770726305161,
+                        15069830105509539134,
+                        11694502824869259129,
+                        12399769568792865309,
+                        5364747168473928464,
                     ]),
                     BlsScalar::zero(),
                 );
 
+                // This code will be used to rederive hard coded comparison once
+                // new conrete constants are added let in_out_of
+                // = vec![     BlsScalar::from(2),
+                //     -BlsScalar::one(),
+                //     BlsScalar::from(23848872923),
+                //     BlsScalar::from(298375439085),
+                // ];
+                // let out_result = sponge_zelbet_out_of(in_out_of, 4);
+                // (0..5).for_each(|k| {
+                //     println!("BlsScalar({:?}),", out_result[k].0);
+                // });
+
                 let two = composer.add_input(BlsScalar::from(2));
-                let result2 = sponge_zelbet_gadget(composer, vec![two; 4], 4);
+                let result2 = sponge_zelbet_gadget(
+                    composer,
+                    vec![two, minus_one, in3, in4],
+                    4,
+                );
 
                 // Compare output values to output from out of circuit version
                 // to help ensure consistency
                 composer.constrain_to_constant(
                     result2[0],
                     BlsScalar([
-                        11579792014922627373,
-                        2934221241967416843,
-                        8345478288467627804,
-                        7623670637766636891,
+                        50388045448079473,
+                        384051309187165497,
+                        17074440178406220027,
+                        4622546261568619502,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result2[1],
                     BlsScalar([
-                        4874119729451523912,
-                        8725796636719379660,
-                        7985091090312449276,
-                        8228914025318238834,
+                        712597510735913230,
+                        13604629047046587810,
+                        6697632738670923132,
+                        2667435796250906486,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result2[2],
                     BlsScalar([
-                        14622228267955924779,
-                        9615659355454524416,
-                        2250804130334070584,
-                        6587213602798012345,
+                        4747679144187806666,
+                        17057363089776844537,
+                        14268833567824355452,
+                        7245403559243854770,
                     ]),
                     BlsScalar::zero(),
                 );
                 composer.constrain_to_constant(
                     result2[3],
                     BlsScalar([
-                        18368122655394568764,
-                        410839651173137500,
-                        18398795598074206863,
-                        2720386774260300492,
+                        15177100986493334512,
+                        6414273404242081015,
+                        11742282880708228053,
+                        2437632187824534994,
                     ]),
                     BlsScalar::zero(),
                 );
@@ -333,13 +366,14 @@ mod tests {
     fn test_sponge_zelbet() {
         let state = vec![BlsScalar::from(1); 5];
         let mut length_out = 5;
-        let output = sponge_zelbet(state, length_out);
+        let output = sponge_zelbet_out_of(state, length_out);
         (0..length_out).for_each(|k| {
             println!("value {} is {:?}", k + 1, output[k].0);
         });
 
         length_out = 4;
-        let output2 = sponge_zelbet(vec![BlsScalar::from(2); 4], length_out);
+        let output2 =
+            sponge_zelbet_out_of(vec![BlsScalar::from(2); 4], length_out);
         (0..length_out).for_each(|k| {
             println!("second value {} is {:?}", k + 1, output2[k].0);
         });

@@ -636,13 +636,6 @@ pub const INVERSES_S_I: [Scalar; 27] = [
     ]),
 ];
 
-#[test]
-fn to_mont() {
-    (0..659).for_each(|k| {
-        println!("Scalar({:?}),", Scalar::from_raw(SBOX_U256[k].0).0)
-    })
-}
-
 /// Sbox used in bar function, where the row index indicates the permutation,
 /// and items are in Montgomery scalar form
 pub const SBOX_MONTGOMERY: [Scalar; 659] = [

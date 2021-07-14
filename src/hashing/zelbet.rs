@@ -49,17 +49,17 @@ pub fn zelbet_gadget(
     let mut round3_constants = [one; 3];
     round3_constants.copy_from_slice(&constants_for_rounds[6..9]);
     item = concrete_gadget(composer, &item, &round3_constants);
-    // Apply bar function to each entry
-    (0..3).for_each(|k| {
-        item[k] =
-            bar_gadget(composer, item[k], s_i_decomposition, zero, one, two);
-    });
+    item = brick_gadget(composer, &item, two);
 
     // Round 4
     let mut round4_constants = [one; 3];
     round4_constants.copy_from_slice(&constants_for_rounds[9..12]);
     item = concrete_gadget(composer, &item, &round4_constants);
-    item = brick_gadget(composer, &item, two);
+    // Apply bar function to each entry
+    (0..3).for_each(|k| {
+        item[k] =
+            bar_gadget(composer, item[k], s_i_decomposition, zero, one, two);
+    });
 
     // Round 5
     let mut round5_constants = [one; 3];
@@ -67,10 +67,22 @@ pub fn zelbet_gadget(
     item = concrete_gadget(composer, &item, &round5_constants);
     item = brick_gadget(composer, &item, two);
 
-    // Final concrete
+    // Round 6
     let mut round6_constants = [one; 3];
     round6_constants.copy_from_slice(&constants_for_rounds[15..18]);
     item = concrete_gadget(composer, &item, &round6_constants);
+    item = brick_gadget(composer, &item, two);
+
+    // Round 7
+    let mut round7_constants = [one; 3];
+    round7_constants.copy_from_slice(&constants_for_rounds[12..15]);
+    item = concrete_gadget(composer, &item, &round7_constants);
+    item = brick_gadget(composer, &item, two);
+
+    // Final concrete
+    let mut round8_constants = [one; 3];
+    round8_constants.copy_from_slice(&constants_for_rounds[9..12]);
+    item = concrete_gadget(composer, &item, &round8_constants);
 
     item
 }
@@ -84,12 +96,16 @@ pub fn zelbet_out_of_circuit(scalar_inputs: [BlsScalar; 3]) -> [BlsScalar; 3] {
     new_state = concrete(new_state, CONSTANTS_BLS[1]);
     new_state = brick(new_state);
     new_state = concrete(new_state, CONSTANTS_BLS[2]);
-    bar(&mut new_state);
-    new_state = concrete(new_state, CONSTANTS_BLS[3]);
     new_state = brick(new_state);
+    new_state = concrete(new_state, CONSTANTS_BLS[3]);
+    bar(&mut new_state);
     new_state = concrete(new_state, CONSTANTS_BLS[4]);
     new_state = brick(new_state);
     new_state = concrete(new_state, CONSTANTS_BLS[5]);
+    new_state = brick(new_state);
+    new_state = concrete(new_state, CONSTANTS_BLS[4]);
+    new_state = brick(new_state);
+    new_state = concrete(new_state, CONSTANTS_BLS[3]);
     new_state
 }
 
