@@ -4,6 +4,10 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
+#![feature(test)]
+
+extern crate test;
+
 pub mod constants;
 pub mod hashing;
 mod test_helper;

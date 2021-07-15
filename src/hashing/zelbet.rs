@@ -114,6 +114,48 @@ mod tests {
     use super::*;
     use crate::{constants::S_I_DECOMPOSITION_MONTGOMERY, gadget_tester};
     use dusk_plonk::plookup::PlookupTable4Arity;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_zelbet_out(b: &mut Bencher) {
+        let minus_one = -BlsScalar::one();
+        let mut input = [minus_one; 3];
+        b.iter(|| zelbet_out_of_circuit(input));
+    }
+
+    #[bench]
+    fn bench_zelbet_in(b: &mut Bencher) {
+        let mut composer = StandardComposer::new();
+        let hash_table = PlookupTable4Arity::create_hash_table();
+        composer.append_lookup_table(&hash_table);
+        let zero = composer.add_input(BlsScalar::zero());
+        let one = composer.add_input(BlsScalar::one());
+        let two = composer.add_input(BlsScalar::from(2));
+        let mut s_i_decomposition = [one; 27];
+        (0..27).for_each(|k| {
+            s_i_decomposition[k] = composer.add_witness_to_circuit_description(
+                S_I_DECOMPOSITION_MONTGOMERY[k],
+            );
+        });
+        let mut constants_for_rounds = [one; 18];
+        (0..6).for_each(|k| {
+            (0..3).for_each(|j| {
+                constants_for_rounds[3 * k + j] =
+                    composer.add_input(CONSTANTS_BLS[k][j]);
+            })
+        });
+        b.iter(|| {
+            zelbet_gadget(
+                &mut composer,
+                &[one; 3],
+                s_i_decomposition,
+                constants_for_rounds,
+                zero,
+                one,
+                two,
+            )
+        });
+    }
 
     #[test]
     fn test_zelbet_gadget_circuit() {

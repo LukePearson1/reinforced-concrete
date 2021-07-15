@@ -6,6 +6,7 @@
 
 //! This file contains the circuit implementation of the
 //! zelbet hash function
+use super::divide_w_recip;
 use crate::constants::{DECOMPOSITION_S_I, SBOX_MONTGOMERY};
 use bigint::U256 as u256;
 use dusk_plonk::constraint_system::{StandardComposer, Variable};
@@ -141,7 +142,7 @@ pub fn concrete_gadget(
 }
 
 /// In circuit bar function, making use of decomposition gadget
-/// and s-box functions that are defined in PLONK repo
+/// that is defined in PLONK repo
 pub fn bar_gadget(
     composer: &mut StandardComposer,
     input: Variable,
@@ -226,12 +227,10 @@ pub fn bar_gadget(
         BlsScalar::zero(),
     );
     (1..=26).rev().for_each(|k| {
-        let s_i_var =
-            composer.add_input(BlsScalar::from_raw(DECOMPOSITION_S_I[k - 1].0));
         accumulator_var = composer.big_mul(
             BlsScalar::one(),
             accumulator_var,
-            s_i_var,
+            s_i_decomposition[k - 1],
             Some((BlsScalar::one(), tuple_mont[k - 1])),
             BlsScalar::zero(),
             BlsScalar::zero(),
@@ -301,6 +300,56 @@ mod tests {
     use crate::hashing::zelbet::brick;
     use crate::{gadget_tester, hashing::zelbet::concrete};
     use dusk_plonk::plookup::PlookupTable4Arity;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_bar_gadget(b: &mut Bencher) {
+        let mut composer = StandardComposer::new();
+        let hash_table = PlookupTable4Arity::create_hash_table();
+        composer.append_lookup_table(&hash_table);
+        let zero = composer.add_input(BlsScalar::zero());
+        let one = composer.add_input(BlsScalar::one());
+        let two = composer.add_input(BlsScalar::from(2));
+        let minus_one = composer.add_input(-BlsScalar::one());
+        let mut s_i_decomposition = [one; 27];
+        (0..27).for_each(|k| {
+            s_i_decomposition[k] = composer.add_witness_to_circuit_description(
+                S_I_DECOMPOSITION_MONTGOMERY[k],
+            );
+        });
+        b.iter(|| {
+            (0..3).for_each(|_| {
+                bar_gadget(
+                    &mut composer,
+                    minus_one,
+                    s_i_decomposition,
+                    zero,
+                    one,
+                    two,
+                );
+            })
+        });
+    }
+
+    #[bench]
+    fn bench_decomp(b: &mut Bencher) {
+        let mut composer = StandardComposer::new();
+        let one = composer.add_input(BlsScalar::one());
+        let minus_one = composer.add_input(-BlsScalar::one());
+        let mut s_i_decomposition = [one; 27];
+        (0..27).for_each(|k| {
+            s_i_decomposition[k] = composer.add_witness_to_circuit_description(
+                S_I_DECOMPOSITION_MONTGOMERY[k],
+            );
+        });
+        b.iter(|| {
+            (0..3).for_each(|_| {
+                (0..3).for_each(|_| {
+                    composer.decomposition_gadget(minus_one, s_i_decomposition);
+                });
+            })
+        });
+    }
 
     #[test]
     fn test_bar_gadget() {
