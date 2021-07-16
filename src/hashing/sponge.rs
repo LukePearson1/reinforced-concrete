@@ -209,6 +209,34 @@ mod tests {
     use super::*;
     use crate::gadget_tester;
     use dusk_plonk::plookup::PlookupTable4Arity;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_sponge_out(b: &mut Bencher) {
+        let state = vec![BlsScalar::from(1); 5];
+        let mut length_out = 5;
+
+        b.iter(|| {
+            sponge_zelbet_out_of(state.clone(), length_out);
+        });
+    }
+
+    #[bench]
+    fn bench_sponge_in(b: &mut Bencher) {
+        let mut composer = StandardComposer::new();
+        let hash_table = PlookupTable4Arity::create_hash_table();
+        composer.append_lookup_table(&hash_table);
+        let one = composer.add_input(BlsScalar::one());
+        let minus_one = composer.add_input(-BlsScalar::one());
+        let in3 = composer.add_input(BlsScalar::from(23848872923));
+        let in4 = composer.add_input(BlsScalar::from(298375439085));
+        let in5 = composer.add_input(-BlsScalar::from(45));
+        let input = vec![one, minus_one, in3, in4, in5];
+
+        b.iter(|| {
+            sponge_zelbet_gadget(&mut composer, input.clone(), 5);
+        });
+    }
 
     // Currently nothing to actually test this result against, this test simply
     // checks whether the function runs or not. Should add results from an

@@ -1,4 +1,10 @@
-//-----------------------------------------------------------------------------
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) DUSK NETWORK. All rights reserved.
+
+//! Code for fast modular operation provided by Roman
 
 #[inline(always)]
 pub const fn full_shl(u: &[u64; 4], shift: u32) -> ([u64; 4], u64) {
@@ -96,26 +102,6 @@ fn main() {
     let (divisor, recip) = compute_normalized_divisor_and_reciproical(div);
     let s = (div as u64).leading_zeros();
 
-    // division: nom / div
+    // division: nom = result*divisor + remainder
     let (result, remainder) = divide_long_using_recip(&nom, divisor, recip, s);
-}
-
-#[test]
-fn test_divide_w_recip() {
-    // let nom = [1u64; 4];
-    let nom = [47, 0, 0, 0];
-    // let div: u16 = 1023;
-    let div: u16 = 7;
-
-    // preocomputation
-    let (divisor, recip) = compute_normalized_divisor_and_reciproical(div);
-    println!("div: {:?}", div);
-    println!("divisor: {:?}", divisor);
-    println!("recip: {:?}", recip);
-    let s = (div as u64).leading_zeros();
-
-    // division: nom / div
-    let (result, remainder) = divide_long_using_recip(&nom, divisor, recip, s);
-    println!("result: {:?}", result);
-    println!("remainder: {:?}", remainder);
 }

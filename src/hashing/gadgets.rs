@@ -344,10 +344,8 @@ mod tests {
         });
         b.iter(|| {
             (0..3).for_each(|_| {
-                (0..3).for_each(|_| {
-                    composer.decomposition_gadget(minus_one, s_i_decomposition);
-                });
-            })
+                composer.decomposition_gadget(minus_one, s_i_decomposition);
+            });
         });
     }
 
