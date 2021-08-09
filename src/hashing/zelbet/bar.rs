@@ -4,7 +4,10 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
-use crate::constants::{DECOMPOSITION_S_I, INVERSES_S_I, SBOX_U256, VU_256};
+use crate::constants::{
+    BLS_DIVISORS, BLS_RECIP, DECOMPOSITION_S_I, INVERSES_S_I, SBOX_U256, VU_256,
+};
+use crate::hashing::divide_w_recip;
 use bigint::U256 as u256;
 use dusk_plonk::prelude::BlsScalar as Scalar;
 
@@ -48,26 +51,34 @@ pub fn bar(state: &mut [Scalar; 3]) {
         // Get state value that we are decomposing in non-Montgomery form (comes
         // in Montgomery form by default due to BLS library; but the
         // modular operations can't be done if left like this)
-        let mut intermediate = u256(scalar.reduce().0);
-        let mut remainder = u256::zero();
+        let mut intermediate = scalar.reduce().0;
+        let mut remainder = 0u16;
+        // s should be set to the number of leading zeros of div in each
+        // iteration of the loop below, but under BLS conditions this value is
+        // always 54
+        let s: u32 = 54;
 
         (0..27).for_each(|k| {
             // Reduce intermediate representation
             match k < 26 {
                 true => {
-                    remainder = intermediate % u256(DECOMPOSITION_S_I[k].0);
-                    // Ensure s_i inverses are in Montgomery form, because BLS
-                    // scalar multiplication removes a
-                    // factor of 2^512
-                    let intermediate_scalar: Scalar =
-                        Scalar((intermediate - remainder).0) * INVERSES_S_I[k];
-                    intermediate = u256(intermediate_scalar.0);
+                    // precomputation for modular operation
+                    let divisor = BLS_DIVISORS[k];
+                    let recip = BLS_RECIP[k];
+                    // division: intermediate = u0*divisor + u1
+                    let (u0, u1) = divide_w_recip::divide_long_using_recip(
+                        &intermediate,
+                        divisor,
+                        recip,
+                        s,
+                    );
+                    intermediate = u0;
+                    remainder = u1;
                 }
-                false => remainder = intermediate,
+                false => remainder = intermediate[0] as u16,
             };
-
             // 2. S-box
-            nibbles[k] = small_s_box(remainder);
+            nibbles[k] = small_s_box(u256([remainder as u64, 0, 0, 0]));
         });
 
         // 3. Composition
@@ -79,6 +90,14 @@ mod tests {
     use crate::constants::BLS_SCALAR_REAL;
 
     use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_decompose_recip(b: &mut Bencher) {
+        let minus_one = -Scalar::one();
+        let mut input = [minus_one; 3];
+        b.iter(|| bar(&mut input));
+    }
 
     #[test]
     fn test_bar() {

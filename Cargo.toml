@@ -8,8 +8,8 @@ edition = "2018"
 
 [dependencies]
 bigint = "4.4.3"
-dusk-plonk = { git = "https://github.com/dusk-network/plonk", tag = "v0.8.1-plonkup.0" }
-rand_core = "0.5"
+dusk-plonk = { git = "https://github.com/dusk-network/plonkup", tag = "v0.1.0" }
+rand_core = "0.6"
 rand = "0.7"
 anyhow = "1.0.32"
 dusk-bytes = "0.1.4"

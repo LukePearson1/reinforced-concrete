@@ -4,6 +4,7 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
+pub mod divide_w_recip;
 pub mod gadgets;
 pub mod sponge;
 pub mod zelbet;
