@@ -32,8 +32,8 @@ pub fn sponge_zelbet_gadget(
     let mut constants_for_rounds = [one; 18];
     (0..6).for_each(|k| {
         (0..3).for_each(|j| {
-            constants_for_rounds[3 * k + j] =
-                composer.add_input(CONSTANTS_BLS[k][j]);
+            constants_for_rounds[3 * k + j] = composer
+                .add_witness_to_circuit_description(CONSTANTS_BLS[k][j]);
         })
     });
 
@@ -77,14 +77,14 @@ pub fn sponge_zelbet_gadget(
             (BlsScalar::one(), input[2 * k]),
             None,
             BlsScalar::zero(),
-            BlsScalar::zero(),
+            None,
         );
         state[1] = composer.big_add(
             (BlsScalar::one(), state[1]),
             (BlsScalar::one(), input[2 * k + 1]),
             None,
             BlsScalar::zero(),
-            BlsScalar::zero(),
+            None,
         );
         // Conduct the next round of hashing
         state = zelbet_gadget(
@@ -242,7 +242,7 @@ mod tests {
     // checks whether the function runs or not. Should add results from an
     // independent python programme to compare against
     #[test]
-    fn test_sponge_out_of() {
+    fn test_sponge_in_circuit() {
         let res = gadget_tester(
             |composer| {
                 // This code will be used to rederive hard coded comparison once
@@ -265,7 +265,9 @@ mod tests {
                 let in4 = composer.add_input(BlsScalar::from(298375439085));
                 let in5 = composer.add_input(-BlsScalar::from(45));
                 let input = vec![one, minus_one, in3, in4, in5];
+                println!("circuit size: {:?}", composer.circuit_size());
                 let result = sponge_zelbet_gadget(composer, input, 5);
+                println!("circuit size: {:?}", composer.circuit_size());
 
                 // Compare output values to output from out of circuit version
                 // to help ensure consistency
@@ -277,7 +279,7 @@ mod tests {
                         2677010683091861284,
                         5989822391440071232,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result[1],
@@ -287,7 +289,7 @@ mod tests {
                         14480882572942963540,
                         7231953833215603379,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result[2],
@@ -297,7 +299,7 @@ mod tests {
                         13339627484282619079,
                         5821826886014145595,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result[3],
@@ -307,7 +309,7 @@ mod tests {
                         17629428195131741089,
                         861367079814241638,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result[4],
@@ -317,7 +319,7 @@ mod tests {
                         12399769568792865309,
                         5364747168473928464,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
 
                 // This code will be used to rederive hard coded comparison once
@@ -333,11 +335,13 @@ mod tests {
                 // });
 
                 let two = composer.add_input(BlsScalar::from(2));
+                println!("circuit size: {:?}", composer.circuit_size());
                 let result2 = sponge_zelbet_gadget(
                     composer,
                     vec![two, minus_one, in3, in4],
                     4,
                 );
+                println!("circuit size: {:?}", composer.circuit_size());
 
                 // Compare output values to output from out of circuit version
                 // to help ensure consistency
@@ -349,7 +353,7 @@ mod tests {
                         17074440178406220027,
                         4622546261568619502,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result2[1],
@@ -359,7 +363,7 @@ mod tests {
                         6697632738670923132,
                         2667435796250906486,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result2[2],
@@ -369,7 +373,7 @@ mod tests {
                         14268833567824355452,
                         7245403559243854770,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
                 composer.constrain_to_constant(
                     result2[3],
@@ -379,7 +383,7 @@ mod tests {
                         11742282880708228053,
                         2437632187824534994,
                     ]),
-                    BlsScalar::zero(),
+                    None,
                 );
             },
             5000,

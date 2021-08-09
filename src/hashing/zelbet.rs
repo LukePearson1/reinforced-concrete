@@ -12,7 +12,7 @@ mod brick;
 mod concrete;
 
 use super::gadgets::*;
-use crate::constants::CONSTANTS_BLS;
+use crate::constants::{CONSTANTS_BLS, MONTGOMERY_FOUR, MONTGOMERY_THREE};
 pub use bar::bar;
 pub use brick::brick;
 pub use concrete::concrete;
@@ -31,30 +31,31 @@ pub fn zelbet_gadget(
     one: Variable,
     two: Variable,
 ) -> [Variable; 3] {
-    let mut constants_vector = [one; 3];
-
     // Round 1
     let mut round1_constants = [one; 3];
     round1_constants.copy_from_slice(&constants_for_rounds[0..3]);
-    let mut item = concrete_gadget(composer, state, &round1_constants);
-    item = brick_gadget(composer, &item, two);
+    let mut item = concrete_gadget(composer, state, &round1_constants, 0);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Round 2
     let mut round2_constants = [one; 3];
     round2_constants.copy_from_slice(&constants_for_rounds[3..6]);
-    item = concrete_gadget(composer, &item, &round2_constants);
-    item = brick_gadget(composer, &item, two);
+    item = concrete_gadget(composer, &item, &round2_constants, 1);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Round 3
     let mut round3_constants = [one; 3];
     round3_constants.copy_from_slice(&constants_for_rounds[6..9]);
-    item = concrete_gadget(composer, &item, &round3_constants);
-    item = brick_gadget(composer, &item, two);
+    item = concrete_gadget(composer, &item, &round3_constants, 2);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Round 4
     let mut round4_constants = [one; 3];
     round4_constants.copy_from_slice(&constants_for_rounds[9..12]);
-    item = concrete_gadget(composer, &item, &round4_constants);
+    item = concrete_gadget(composer, &item, &round4_constants, 3);
     // Apply bar function to each entry
     (0..3).for_each(|k| {
         item[k] =
@@ -64,25 +65,28 @@ pub fn zelbet_gadget(
     // Round 5
     let mut round5_constants = [one; 3];
     round5_constants.copy_from_slice(&constants_for_rounds[12..15]);
-    item = concrete_gadget(composer, &item, &round5_constants);
-    item = brick_gadget(composer, &item, two);
+    item = concrete_gadget(composer, &item, &round5_constants, 4);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Round 6
     let mut round6_constants = [one; 3];
     round6_constants.copy_from_slice(&constants_for_rounds[15..18]);
-    item = concrete_gadget(composer, &item, &round6_constants);
-    item = brick_gadget(composer, &item, two);
+    item = concrete_gadget(composer, &item, &round6_constants, 5);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Round 7
     let mut round7_constants = [one; 3];
     round7_constants.copy_from_slice(&constants_for_rounds[12..15]);
-    item = concrete_gadget(composer, &item, &round7_constants);
-    item = brick_gadget(composer, &item, two);
+    item = concrete_gadget(composer, &item, &round7_constants, 4);
+    item =
+        brick_gadget(composer, &item, two, MONTGOMERY_THREE, MONTGOMERY_FOUR);
 
     // Final concrete
     let mut round8_constants = [one; 3];
     round8_constants.copy_from_slice(&constants_for_rounds[9..12]);
-    item = concrete_gadget(composer, &item, &round8_constants);
+    item = concrete_gadget(composer, &item, &round8_constants, 3);
 
     item
 }
@@ -158,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn test_zelbet_gadget_circuit() {
+    fn test_zelbet_in_gadget_circuit() {
         let res = gadget_tester(
             |composer| {
                 let hash_table = PlookupTable4Arity::create_hash_table();
@@ -166,6 +170,7 @@ mod tests {
                 let zero = composer.add_input(BlsScalar::zero());
                 let one = composer.add_input(BlsScalar::one());
                 let two = composer.add_input(BlsScalar::from(2));
+                println!("circuit size: {:?}", composer.circuit_size());
                 let mut s_i_decomposition = [one; 27];
                 (0..27).for_each(|k| {
                     s_i_decomposition[k] = composer
@@ -176,10 +181,13 @@ mod tests {
                 let mut constants_for_rounds = [one; 18];
                 (0..6).for_each(|k| {
                     (0..3).for_each(|j| {
-                        constants_for_rounds[3 * k + j] =
-                            composer.add_input(CONSTANTS_BLS[k][j]);
+                        constants_for_rounds[3 * k + j] = composer
+                            .add_witness_to_circuit_description(
+                                CONSTANTS_BLS[k][j],
+                            );
                     })
                 });
+                println!("circuit size: {:?}", composer.circuit_size());
                 let _result = zelbet_gadget(
                     composer,
                     &[one; 3],
@@ -189,6 +197,7 @@ mod tests {
                     one,
                     two,
                 );
+                println!("circuit size: {:?}", composer.circuit_size());
 
                 let one_eight_seven = composer.add_input(BlsScalar::from(187));
                 let zero = composer.add_input(BlsScalar::from(0));

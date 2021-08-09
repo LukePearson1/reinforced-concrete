@@ -94,14 +94,14 @@ pub const fn divide_long_using_recip(
 //-----------------------------------------------------------------------------
 
 // example:
-fn main() {
-    let nom = [1u64; 4];
-    let div: u16 = 1023;
+// fn main() {
+//     let nom = [1u64; 4];
+//     let div: u16 = 1023;
 
-    // preocomputation
-    let (divisor, recip) = compute_normalized_divisor_and_reciproical(div);
-    let s = (div as u64).leading_zeros();
+//     // preocomputation
+//     let (divisor, recip) = compute_normalized_divisor_and_reciproical(div);
+//     let s = (div as u64).leading_zeros();
 
-    // division: nom = result*divisor + remainder
-    let (result, remainder) = divide_long_using_recip(&nom, divisor, recip, s);
-}
+//     // division: nom = result*divisor + remainder
+//     let (result, remainder) = divide_long_using_recip(&nom, divisor, recip,
+// s); }
