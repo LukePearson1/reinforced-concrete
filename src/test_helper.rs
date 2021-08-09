@@ -118,5 +118,5 @@ pub(crate) fn gadget_tester(
     verifier.preprocess(&ck)?;
 
     // Verify proof
-    verifier.verify(&proof, &vk, &public_inputs, &lookup_table)
+    Ok(verifier.verify(&proof, &vk, &public_inputs, &lookup_table))?;
 }
