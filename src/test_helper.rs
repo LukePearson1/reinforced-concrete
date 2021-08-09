@@ -4,10 +4,10 @@
 //
 // Copyright (c) DUSK NETWORK. All rights reserved.
 
+use anyhow::{Error, Result};
 use dusk_plonk::prelude::*;
 use dusk_plonk::proof_system::{Prover, Verifier};
-// use rand_core::{Error, OsRng};
-use anyhow::{Error, Result};
+use rand_core::{CryptoRng, OsRng};
 
 // Takes a generic gadget function with no auxillary input and
 // tests whether it passes an end-to-end test
@@ -71,8 +71,7 @@ pub(crate) fn gadget_tester(
     n: usize,
 ) -> Result<(), Error> {
     // Common View
-    let public_parameters =
-        PublicParameters::setup(2 * n, &mut rand::thread_rng())?;
+    let public_parameters = PublicParameters::setup(2 * n, &mut OsRng)?;
     // Provers View
     let (proof, public_inputs, lookup_table) = {
         // Create a prover struct
@@ -93,7 +92,7 @@ pub(crate) fn gadget_tester(
 
         // Once the prove method is called, the public inputs are cleared
         // So pre-fetch these before calling Prove
-        let public_inputs = prover.mut_cs().public_inputs.clone();
+        let public_inputs = prover.mut_cs().construct_dense_pi_vec();
         let lookup_table = prover.mut_cs().lookup_table.clone();
 
         // Compute Proof
@@ -118,5 +117,5 @@ pub(crate) fn gadget_tester(
     verifier.preprocess(&ck)?;
 
     // Verify proof
-    Ok(verifier.verify(&proof, &vk, &public_inputs, &lookup_table))?;
+    Ok(verifier.verify(&proof, &vk, &public_inputs)?)
 }
