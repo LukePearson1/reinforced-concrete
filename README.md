@@ -41,6 +41,9 @@ Each function will be explained more below; the figure
 below illustrates the order in which these functions
 are applied.
 
+![construction](https://user-images.githubusercontent.com/49643572/129221137-b68ad83f-1cdb-4643-bb50-302aa87bc3ac.png)
+
+
 *Concrete*
 This function multiplies the three element state by a 
 3x3 MDS matrix, and consequently adds a constant to each
@@ -49,6 +52,10 @@ the figure below. Note that the index $j$ indicates the
 round number (concrete is used six times), so the three
 dimensional constant vector $c^(j)$ is different for
 each of these rounds.
+
+![concrete](https://user-images.githubusercontent.com/49643572/129221363-f852674d-3180-499b-a715-718d9d773406.png)
+
+
 Concrete allows statistical and algebraic properties 
 to be spread to the whole state, providing protection.
 
