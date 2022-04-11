@@ -2,9 +2,7 @@
 Implementation of the Hash function, Reinforced 
 Concrete, for BLS12-381 curve group. This implementation 
 is designed for zero-knowledge in-circuit hashing and makes use of 
-Plookup tables to lookup values,
-Implementation designed by the 
-[dusk](https://dusk.network) team. 
+Plookup tables to lookup values.
 
 ## About
 This hash function was developed by Dmitry 
